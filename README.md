@@ -4,9 +4,9 @@
 
 ## GitHub Pages
 
-[源码仓库](https://github.com/nonspt/Rowing) · [目标网址](https://nonspt.github.io/Rowing/) · [自动部署](https://github.com/nonspt/Rowing/actions/workflows/pages.yml)
+[在线使用](https://nonspt.github.io/Rowing/) · [源码仓库](https://github.com/nonspt/Rowing) · [自动部署](https://github.com/nonspt/Rowing/actions/workflows/pages.yml)
 
-首次发布需在仓库 Settings → Pages → Build and deployment → Source 选择 **GitHub Actions**。首次部署成功后目标网址可访问；之后推送 main 自动测试、构建并发布。实际发布状态见 [当前状态](docs/project/CURRENT_STATUS.md)，配置与回滚见 [部署说明](docs/project/DEPLOYMENT.md)。
+GitHub Pages 已开启并成功发布 0.1.2 预览版；之后推送 main 自动测试、构建并发布。Source 已设置为 **GitHub Actions**。实际验证见 [验收记录](docs/project/VALIDATION_REPORT.md)，配置与回滚见 [部署说明](docs/project/DEPLOYMENT.md)。
 
 线上与 localhost 属于不同浏览器源，本地记录不会自动转移。需要迁移时先在本地设置中导出 JSON，再到线上设置中校验、预览并确认合并导入。
 
@@ -78,4 +78,4 @@ pnpm audit:svg
 | [架构决策](docs/architecture/ADR/0001-local-first-ios-pwa.md) | 技术取舍 |
 | [变更记录](CHANGELOG.md) | 版本历史 |
 
-下一阶段：完成 Pages 开启与线上核验，再进行 iPhone HTTPS 主屏、VoiceOver / 字体放大实机验收。设备仍为后续专项。
+下一阶段：iPhone HTTPS 主屏、VoiceOver / 字体放大实机验收。设备仍为后续专项。

@@ -5,7 +5,12 @@
 - 新增 GitHub Pages 工作流、无自定义 HTTP 安全头的 /Rowing/ 模拟服务器与 test:pages。
 - 12 项核心规则、TypeScript / 生产构建、18 个源文件 SVG 审计通过。
 - /Rowing/ 下 Manifest 路径、安装图标、SW scope、HTML CSP 阻止内联脚本、四标签离线及 iPhone Air 20 组流程通过，0 pageerror。
-- 本地与线上是不同浏览器源；测试使用隔离浏览器与合成数据，不上传真实训练数据。Pages 设置、GitHub Actions 执行、线上 HTTPS 与真实 iOS 验收尚未计为通过。
+- 最终构建 d1d532145d75；本地 PWA / 更新 / 容量 5 组通过，1000 条导入 1034ms，0 pageerror。
+- [GitHub Actions](https://github.com/nonspt/Rowing/actions/runs/37737172486)构建通过：12 项核心、SVG 审计、TypeScript / PWA 构建与 iPhone Air 20 组。首次发布因 Pages 未开启失败，用户开启后第 2 次执行发布成功。
+- 线上 HTTPS 200，构建与本地 / 云端一致；三种 Manifest 安装图标 200，Manifest / SW scope 为 /Rowing/，start_url 为 /Rowing/#/today，系统深色与截图已核验，0 pageerror。
+- 线上 iPhone Air 完整 20 组通过：记录 / 跟练 / 备份 / 存储故障主链路 10 组，布局 / 动画 / 200% 字体 / 偏好 / 离线专用 10 组，0 pageerror；截图实际 1260×2736。
+- 最初两次线上脚本在 networkidle 导航等待时超时；按 Playwright 官方建议改为 DOMContentLoaded 与可见控件就绪，离线仍明确检查 SW 控制。修正后完整流程通过；未改变应用行为或放宽数据校验。
+- 本地与线上是不同浏览器源；测试使用隔离浏览器与合成数据，不上传真实训练数据。真实 iOS 主屏 / Safari 验收尚未计为通过。
 
 ## 0.1.1 本地预览历史结果
 
@@ -61,7 +66,7 @@
 
 图标、动作、周图表、训练进度使用 SVG。按钮、原生表单、开关外观、弹层与布局使用 HTML / CSS；安装 PNG 从 SVG 源文件生成。不能声称所有界面元素均为 SVG。
 
-## 未执行范围
+## 0.1.1 当时未执行范围
 
 iPhone / iPad Safari 与 HTTPS 主屏安装、实际安全区和动态工具栏、原生键盘与选择器、VoiceOver、iOS Dynamic Type、低电量／锁屏音频／系统回收、移动 LCP / CLS / 长任务、10000 条与 10MB 边界、未来 schema 升级及回滚、外部部署尚未验证。
 

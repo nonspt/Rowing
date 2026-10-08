@@ -1,13 +1,14 @@
 # CHANGELOG
 
-应用使用 MAJOR.MINOR.PATCH；文档版本独立管理。当前没有应用发布版本。
+应用使用 MAJOR.MINOR.PATCH；文档版本独立管理。已发布 0.1.2 HTTPS 预览，尚无正式稳定版本。
 
 ## 0.1.2（部署预览）— 2026-10-08
 
 - 将必要源码、锁文件、安装资源、测试及维护文档交付至 nonspt/Rowing；依赖、构建目录、测试报告和本地配置不提交。
-- 新增 GitHub Pages Actions 工作流，固定 Action 提交，测试通过后构建并部署；Pages 设置与线上验收单独记录。
+- 新增 GitHub Pages Actions 工作流，固定 Action 提交，云端测试通过后构建部署；用户开启 Pages 后已上线 HTTPS 预览。
 - 构建 HTML 增加 CSP / Referrer 策略，构建指纹涵盖后处理脚本，保护版本更新一致性。
 - SVG 审计支持全新检出；新增 /Rowing/ 子路径、图标、SW scope、HTML CSP、离线与 iPhone Air 回归。
+- 浏览器流程以 DOM 就绪和可见控件判断页面可用，离线另验 SW 控制；避免线上网络空闲等待误阻塞功能验收。
 - 数据库、训练内容与记录格式保持兼容；跨浏览器源迁移使用现有 JSON 备份合并。
 
 ## 0.1.1（开发预览）— 2026-10-08

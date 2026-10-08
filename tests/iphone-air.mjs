@@ -38,7 +38,7 @@ const layout=async(label)=>{
   assert.deepEqual(issues,[],label);
 };
 try{
-  await page.goto(url,{waitUntil:'networkidle'});
+  await page.goto(url,{waitUntil:'domcontentloaded'});
   await page.getByRole('button',{name:'先用新手默认设置'}).tap();await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   await record('420×912 CSS、DPR 3、触控及 1260×2736 截图',async()=>{
     const actual=await page.evaluate(()=>({width:innerWidth,height:innerHeight,dpr:devicePixelRatio,touch:navigator.maxTouchPoints,mobile:matchMedia('(pointer:coarse)').matches}));
@@ -124,7 +124,7 @@ try{
     assert.deepEqual(svgIssues,[]);
   });
   await record('设备尺寸下离线重开与动画资源可用',async()=>{
-    await page.evaluate(async()=>{await navigator.serviceWorker.ready;});await page.waitForFunction(()=>!!navigator.serviceWorker.controller);await context.setOffline(true);await page.reload({waitUntil:'networkidle'});await tab('学习');await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.rowing-demo .rowing-figure').count(),1);await page.getByRole('button',{name:'分步查看',exact:true}).tap();await page.getByRole('button',{name:'4. 伸手',exact:true}).tap();await tab('训练');assert.ok(await page.getByRole('button',{name:/动作起步/}).count());await context.setOffline(false);
+    await page.evaluate(async()=>{await navigator.serviceWorker.ready;});await page.waitForFunction(()=>!!navigator.serviceWorker.controller);await context.setOffline(true);await page.reload({waitUntil:'domcontentloaded'});await tab('学习');await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('.rowing-demo .rowing-figure').count(),1);await page.getByRole('button',{name:'分步查看',exact:true}).tap();await page.getByRole('button',{name:'4. 伸手',exact:true}).tap();await tab('训练');assert.ok(await page.getByRole('button',{name:/动作起步/}).count());await context.setOffline(false);
   });
   assert.deepEqual(errors,[]);
   const flowReport=JSON.parse(await fs.readFile('test-results/iphone-air-flow-report.json','utf8'));

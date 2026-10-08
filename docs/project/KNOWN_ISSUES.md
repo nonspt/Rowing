@@ -12,7 +12,7 @@
 | K06 | 仅备份合并并保留本机冲突 | 未提供覆盖、完整替换、媒体恢复或重置 |
 | K07 | 10000 条 / 10MB、未来迁移与发布回滚未验 | v1 无破坏性迁移；未来需夹具与 ADR |
 | K08 | 无移动端 LCP / CLS / 长任务与低电量结果 | 构建体积和容量检查不能替代移动真机性能 |
-| K09 | GitHub Pages 设置与线上核验待完成；品牌与机型未定 | 目标 /Rowing/ 已本地模拟；开启及 HTTPS 结果见 DEPLOYMENT |
+| K09 | 应用工作名称和划船机机型仍未最终确定 | 已按授权完成 /Rowing/ HTTPS 部署；真实设备连接仍属后续范围 |
 | K10 | GitHub Pages 不支持项目自定义 HTTP 安全头 | HTML CSP / Referrer 策略已实现；不能宣称服务器发送 frame-ancestors、nosniff 或 Permissions-Policy |
 
 本轮修复并回归：暂停草稿租约误阻塞；可变对象比较导致计划 / 草稿漏写；原生 dialog 遮盖错误提示；接管前刷新；手动编辑时长后结束时间未同步。证据见 [验收记录](VALIDATION_REPORT.md)。

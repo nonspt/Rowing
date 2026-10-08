@@ -10,6 +10,8 @@
 
 长期规范根目录：`D:/OpenAIData/CodexHome/developer-standards/vibe-coding/`；专项规范在其中 `docs/standards/`。
 
+公开仓库不携带个人机器的共享目录。克隆环境缺少该目录时，先依据本入口、PROJECT_CONTEXT 和用户提供的规则执行；专项规范由维护者提供可访问位置，不把不可达绝对链接视为已读取。
+
 - [AI_CODING_RULES](D:/OpenAIData/CodexHome/developer-standards/vibe-coding/docs/standards/AI_CODING_RULES.md)、[AI_AGENT_WORKFLOW](D:/OpenAIData/CodexHome/developer-standards/vibe-coding/docs/standards/AI_AGENT_WORKFLOW.md)、[DEVELOPMENT](D:/OpenAIData/CodexHome/developer-standards/vibe-coding/docs/standards/DEVELOPMENT.md)：常规开发。
 - [UI_DESIGN_SYSTEM](D:/OpenAIData/CodexHome/developer-standards/vibe-coding/docs/standards/UI_DESIGN_SYSTEM.md)、[SVG_ICON_SPEC](D:/OpenAIData/CodexHome/developer-standards/vibe-coding/docs/standards/SVG_ICON_SPEC.md)、[ACCESSIBILITY](D:/OpenAIData/CodexHome/developer-standards/vibe-coding/docs/standards/ACCESSIBILITY.md)：界面。
 - [DATA_GOVERNANCE](D:/OpenAIData/CodexHome/developer-standards/vibe-coding/docs/standards/DATA_GOVERNANCE.md)、[BACKUP_RECOVERY](D:/OpenAIData/CodexHome/developer-standards/vibe-coding/docs/standards/BACKUP_RECOVERY.md)：数据与恢复。

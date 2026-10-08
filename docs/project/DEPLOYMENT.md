@@ -1,10 +1,10 @@
 # GitHub Pages 部署
 
-2026-10-08；0.1.2 部署预览。目标仓库：[nonspt/Rowing](https://github.com/nonspt/Rowing)，目标网址：[划船机](https://nonspt.github.io/Rowing/)。首次启用与线上检查尚未完成，实际进度见 CURRENT_STATUS。
+2026-10-08；0.1.2 部署预览。仓库：[nonspt/Rowing](https://github.com/nonspt/Rowing)，在线应用：[划船机](https://nonspt.github.io/Rowing/)。Pages 已开启，[首次发布](https://github.com/nonspt/Rowing/actions/runs/37737172486)第 2 次执行成功；构建 d1d532145d75，HTTPS 200。实际验证见 VALIDATION_REPORT。
 
 ## 构建与首次开启
 
-在仓库 Settings → Pages → Build and deployment → Source 选择 GitHub Actions。连接器当前没有 Pages 管理接口，首次开启需有管理权限的账号在设置页操作。
+Source 已由用户在仓库 Settings → Pages → Build and deployment 中选为 GitHub Actions。连接器没有 Pages 管理接口；首次运行因站点未开启在 configure-pages 返回 Not Found，用户开启后重跑失败任务，发布成功。
 
 main 推送或 Actions → Deploy GitHub Pages → Run workflow 触发部署。工作流使用 Ubuntu 24.04、Node 24、pnpm 11.25.0，固定第三方 Action 提交。锁文件安装 → 12 项核心测试 → SVG 审计 → TypeScript / PWA 构建 → Pages 子路径与 iPhone Air 模拟 → 上传 dist → github-pages 环境部署。只授予构建 contents:read 与部署 pages:write / id-token:write，不存储个人令牌。
 
@@ -21,6 +21,8 @@ Pages 使用受信任 HTTPS。构建 HTML 在脚本之前注入 CSP 与 no-refer
 ## 核验与回滚
 
 本地 pnpm test:pages 使用无自定义安全头的临时服务器挂载 /Rowing/，检查安装资源、Manifest、SW scope、HTML CSP、四页离线与 iPhone Air 20 组流程。线上需单独检查 HTTPS 200、资源、Manifest / SW、四页、记录、主题、备份及离线；iOS 主屏与 VoiceOver 仍需实际 iPhone。
+
+本次已对线上地址完成上述资源核验与 iPhone Air 20 组流程，0 pageerror。浏览器脚本通过 APP_URL 指向线上；导航按 DOM / 可见控件判断就绪，离线检查单独等待 SW 控制。报告与截图位于被 Git 忽略的 test-results，不上传合成训练备份。
 
 回滚通过 main 上新增 revert 提交恢复已验证源码，重新走同一构建与部署流程；不强推、不删除数据库。不在未保存训练中强制激活版本。未来破坏性数据库变化必须补迁移与回滚方案。
 

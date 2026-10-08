@@ -2,6 +2,8 @@
 
 日期：2026-10-08；版本：0.1.1 本地开发预览。
 
+0.1.2 补充：GitHub Pages 已上线，构建 d1d532145d75；直接对 https://nonspt.github.io/Rowing/ 执行完整 20 组模拟通过，0 pageerror，截图为 1260×2736。系统深色、Manifest / SW scope、安装图标和离线动作资源已核对。以下参数与真实设备边界继续适用；详细发布证据见 VALIDATION_REPORT。
+
 ## 参数与验收范围
 
 [Apple 技术规格](https://www.apple.com/iphone-air/specs/)公布分辨率 1260×2736；[Apple 布局规格](https://developer.apple.com/design/human-interface-guidelines/layout)列出 420×912 pt、@3x。Web 模拟使用 420×912 CSS px、deviceScaleFactor 3、触控和移动视口。截图 PNG 尺寸直接核验为 1260×2736。
