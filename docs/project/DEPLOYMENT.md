@@ -1,6 +1,6 @@
 # GitHub Pages 部署
 
-2026-10-10；0.2.0 预览。仓库：[nonspt/Rowing](https://github.com/nonspt/Rowing)，在线应用：[划船机](https://nonspt.github.io/Rowing/)。
+2026-10-10；0.2.1 预览。仓库：[nonspt/Rowing](https://github.com/nonspt/Rowing)，在线应用：[划船机](https://nonspt.github.io/Rowing/)。
 
 Pages 已在此前由用户开启，Source 为 GitHub Actions；本轮无需重复设置。main 更新自动测试、构建、发布。
 
