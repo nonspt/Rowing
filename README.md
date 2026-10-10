@@ -1,81 +1,56 @@
 # 划船机
 
-家用划船机健身 PWA，当前 **0.1.2 开发预览**。iOS 风格浅色 / 深色界面，首版手动记录，无账号、设备连接或云同步。
+家用划船机训练计划 PWA，当前 **0.2.0 预览版**。仅保留计划与跟练，采用 iOS 风格和系统深色模式。
 
-## GitHub Pages
+[在线使用](https://nonspt.github.io/Rowing/) · [源码](https://github.com/nonspt/Rowing) · [部署状态](https://github.com/nonspt/Rowing/actions/workflows/pages.yml)
 
-[在线使用](https://nonspt.github.io/Rowing/) · [源码仓库](https://github.com/nonspt/Rowing) · [自动部署](https://github.com/nonspt/Rowing/actions/workflows/pages.yml)
+## 使用
 
-GitHub Pages 已开启并成功发布 0.1.2 预览版；之后推送 main 自动测试、构建并发布。Source 已设置为 **GitHub Actions**。实际验证见 [验收记录](docs/project/VALIDATION_REPORT.md)，配置与回滚见 [部署说明](docs/project/DEPLOYMENT.md)。
+1. 选择有氧 / 无氧模板，或创建自定义计划。
+2. 查看周日程，进入对应课程。
+3. 开始跟练；支持暂停、退出恢复、提前结束和自动保存进度。
 
-线上与 localhost 属于不同浏览器源，本地记录不会自动转移。需要迁移时先在本地设置中导出 JSON，再到线上设置中校验、预览并确认合并导入。
+- 六种模板，周期为 2、4、6、8、12 周。
+- 自定义 1–52 周：名称、类型、开始日期、频次、热身、放松；有氧可调主训练时长，无氧可调工作 / 恢复秒数和组数。
+- 更换计划可恢复已保存计划；编辑自定义只改变未完成课程，保留已完成快照与已有读数。
+- 主界面为当前计划、下一次跟练、周日程。教学、课程浏览、历史统计、手动补录入口已移除。
+- 设置只保留主题、提示音、备份和安装 / 更新。
+- 前台计时；切出、锁屏或长间隔暂停，不补算后台时间。
+- 数据保存在当前浏览器，无账号、设备连接和云同步。旧版数据无损升级为 v2，支持 v1 / v2 JSON 备份合并。
+- 统一 SVG 图标、动作示意和进度条；安装 PNG 由 SVG 派生以满足平台要求。
 
-## 启动
+## 开发与验收
 
-双击 [启动预览.cmd](启动预览.cmd)，或在项目目录运行：
-
-```powershell
-node scripts/preview.mjs --open
-```
-
-访问 [本地预览](http://localhost:5188/)。从 GitHub 首次下载后先安装依赖并执行 pnpm build，启动器使用生成的 dist。已有 dist 时不需每次安装依赖；启动器优先查找 PATH 或当前用户已存在的 Codex Node 运行时。跨机器使用请安装 Node.js 22.18 或以上。
-
-数据属于当前浏览器源；更换端口、浏览器或安装环境前请备份。iPhone 主屏验证需要受信任 HTTPS，普通局域网 HTTP 不能代表完整 PWA。
-
-## 当前能力
-
-- 今日建议、10 门课程、三类四周模板；按时间提供完整短课替代，可调整日期、跳过、重复和主动进阶。
-- 五个教学专题、自有 SVG 动作示意与动作自检，不输出自动动作评分。
-- 前台阶段跟练、暂停、提前结束、检查点保存和刷新恢复；后台时间不补算为训练。
-- IndexedDB 本地记录、课程快照、计划与学习进度；手动补录、编辑、删除和周摘要。
-- JSON 备份、严格校验、预览与保留本机冲突的原子合并；本次不提供覆盖冲突、完整替换或删库重置。
-- 系统主题实时跟随、手动浅色 / 深色、统一 SVG 与模态焦点；安装资源、离线缓存、等待版本更新。
-- 存储不可用时明确进入临时模式，可导出备份，不假称永久保存。
-
-训练内容已由用户确认（1.0.0）。界面按需展开说明，学习页支持依据官方教学规则绘制的 SVG 六步演示。iPhone Air / 200% 文字浏览器模拟已补充；iOS Safari / 主屏与 VoiceOver 实机验收未完成，当前不是正式发布版本。
-
-## 开发与验证
+需要 Node 22.18+、pnpm 11.25.0。首次下载运行：
 
 ```powershell
-pnpm install --frozen-lockfile --store-dir .pnpm-store
-pnpm dev
-pnpm check
-pnpm test
+pnpm install --frozen-lockfile
 pnpm build
 pnpm preview
 ```
 
-保持预览服务运行，在另一个终端执行：
+已有构建可双击 [启动预览.cmd](启动预览.cmd)，访问 [本地预览](http://localhost:5188/)。
 
 ```powershell
-pnpm test:browser
-pnpm test:pwa
-pnpm test:iphone-air
-pnpm test:pages
-pnpm audit
-pnpm audit:licenses
+pnpm check
+pnpm test
 pnpm audit:svg
+pnpm test:pages
 ```
 
-浏览器测试默认使用本机 Chrome，可用 CHROME_PATH / APP_URL 指定环境。测试数据属于独立测试浏览器；截图和机器报告在 test-results/，不提交 Git。核心测试使用 Node 原生测试器。
+保持预览运行后可单独执行 pnpm test:browser、pnpm test:pwa、pnpm test:iphone-air。CHROME_PATH 指定 Chrome，APP_URL 指定目标；测试使用隔离浏览器和合成数据，报告与截图在被忽略的 test-results。
 
-生产构建生成版本化 SW、完整资源清单、HTML CSP / Referrer 策略和 _headers。GitHub Pages 不应用自定义 _headers，HTML 策略不包含 frame-ancestors、nosniff 或 Permissions-Policy 等 HTTP 专用策略；本地预览服务器会发送完整安全头。相对资源路径支持静态子目录，页面使用 Hash 导航。
+main 更新后 Actions 自动构建部署。相对资源、Manifest 和 Service Worker 支持 /Rowing/；Pages 通过 HTML 执行 CSP / Referrer 策略，不读取自定义 _headers。
 
-## 文档入口
+本地与线上数据属于不同源。迁移时从原环境导出备份，再在线上校验、预览、确认合并。数据库已升级为 v2，不能直接回滚到只支持 v1 的 0.1.x。
 
-| 文档 | 用途 |
-| --- | --- |
-| [开发文档](docs/product/开发文档_V1.0.md) | 产品设计与依据 |
-| [项目上下文](docs/project/PROJECT_CONTEXT.md) | 实际架构 |
-| [当前状态](docs/project/CURRENT_STATUS.md) | 阶段进度 |
-| [验收记录](docs/project/VALIDATION_REPORT.md) | 实际检查及限制 |
-| [iPhone Air 模拟](docs/project/IPHONE_AIR_ACCEPTANCE.md) | 参数、触控、文字及截图 |
-| [动作图示规范](docs/product/动作图示规范.md) | 官方参考与 SVG 实现 |
-| [已知事项](docs/project/KNOWN_ISSUES.md) | 未完成范围 |
-| [技术债务](docs/project/TECH_DEBT.md) | 维护事项 |
-| [依赖说明](docs/architecture/DEPENDENCIES.md) | 成本、安全与许可 |
-| [开发规则](docs/standards/AI_CODING_RULES.md) | 共享约定 |
-| [架构决策](docs/architecture/ADR/0001-local-first-ios-pwa.md) | 技术取舍 |
-| [变更记录](CHANGELOG.md) | 版本历史 |
+## 文档
 
-下一阶段：iPhone HTTPS 主屏、VoiceOver / 字体放大实机验收。设备仍为后续专项。
+- [当前开发文档](docs/product/训练计划开发文档_V2.md)
+- [项目事实](docs/project/PROJECT_CONTEXT.md)、[当前状态](docs/project/CURRENT_STATUS.md)
+- [验收记录](docs/project/VALIDATION_REPORT.md)、[iPhone Air 模拟](docs/project/IPHONE_AIR_ACCEPTANCE.md)
+- [已知事项](docs/project/KNOWN_ISSUES.md)、[技术债务](docs/project/TECH_DEBT.md)
+- [部署与回滚](docs/project/DEPLOYMENT.md)、[数据升级决策](docs/architecture/ADR/0003-focused-plans-v2.md)
+- [SVG 依据](docs/product/动作图示规范.md)、[依赖](docs/architecture/DEPENDENCIES.md)、[变更历史](CHANGELOG.md)
+
+iPhone Air 分辨率、触控、双主题和文字放大已进行 Chromium 模拟。真实 iOS Safari、主屏、VoiceOver 与锁屏声音仍待实际设备验证。

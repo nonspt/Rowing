@@ -28,12 +28,12 @@ try{
   page.on('pageerror',error=>errors.push(error.message));
   page.on('response',response=>{if(response.status()>=400)errors.push(`${response.status()} ${response.url()}`);});
   await page.goto(url,{waitUntil:'networkidle'});
-  await page.getByRole('button',{name:'先用新手默认设置'}).tap();
+  await page.getByRole('heading',{name:'训练计划',exact:true}).waitFor();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   const manifestURL=new URL(await page.locator('link[rel=manifest]').getAttribute('href'),url);
   const manifest=await (await fetch(manifestURL)).json();
   assert.equal(new URL(manifest.scope,manifestURL).pathname,base);
-  assert.equal(new URL(manifest.start_url,manifestURL).href,url+'#/today');
+  assert.equal(new URL(manifest.start_url,manifestURL).href,url+'#/plans');
   for(const icon of manifest.icons)assert.equal((await fetch(new URL(icon.src,manifestURL))).status,200);
   await page.evaluate(async()=>{await navigator.serviceWorker.ready;});
   await page.waitForFunction(()=>!!navigator.serviceWorker.controller);
@@ -46,10 +46,9 @@ try{
   }));
   assert.match(policy.directive,/script-src/);assert.equal(policy.executed,false);
   await context.setOffline(true);await page.reload({waitUntil:'networkidle'});
-  for(const name of ['学习','训练','记录','今日']){
-    await page.getByRole('navigation',{name:'主要导航'}).getByRole('link',{name,exact:true}).tap();
-    await page.getByRole('heading',{name,exact:true}).waitFor();
-  }
+  await page.getByRole('heading',{name:'训练计划',exact:true}).waitFor();
+  await page.getByRole('button',{name:'有氧计划',exact:true}).waitFor();
+  assert.equal(await page.getByRole('navigation').count(),0);
   await context.setOffline(false);assert.deepEqual(errors,[]);
   await browser.close();browser=undefined;
   const code=await new Promise((resolve,reject)=>{
@@ -58,8 +57,8 @@ try{
   });
   assert.equal(code,0,'Pages 子目录下完整 iPhone Air 流程');
   await fs.mkdir('test-results',{recursive:true});
-  await fs.writeFile('test-results/pages-report.json',JSON.stringify({url,scope:sw,manifestScope:base,htmlCsp:policy,offlineTabs:4,iphoneAirGroups:20,pageErrors:errors},null,2));
-  console.log('PASS Pages 子路径、安装图标、SW scope、HTML CSP、四页离线及 iPhone Air 20 组流程');
+  await fs.writeFile('test-results/pages-report.json',JSON.stringify({url,scope:sw,manifestScope:base,htmlCsp:policy,offlinePlans:true,pageErrors:errors},null,2));
+  console.log('PASS Pages 子路径、安装图标、SW scope、HTML CSP、单页离线及 iPhone Air 完整流程');
 }finally{
   if(browser)await browser.close();
   await new Promise((resolve,reject)=>{server.close(error=>error?reject(error):resolve());server.closeAllConnections();});

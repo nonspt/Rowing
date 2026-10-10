@@ -13,9 +13,9 @@ export class Repository {
   async initialize():Promise<void> {
     if(!this.persistent) return;
     await new Promise<void>((resolve,reject)=>{
-      const request=indexedDB.open('home-rower-db',1);
+      const request=indexedDB.open('home-rower-db',2);
       const timeout=setTimeout(()=>reject(new Error('数据库打开超时。请关闭其他版本的窗口后重试，原数据未删除。')),8000);
-      request.onupgradeneeded=()=>{for(const name of stores) if(!request.result.objectStoreNames.contains(name)) {const store=request.result.createObjectStore(name,{keyPath:'id'}); if(name==='workouts') {store.createIndex('sessionId','sessionId',{unique:true}); store.createIndex('startedAt','startedAt');}}};
+      request.onupgradeneeded=()=>{for(const name of stores) if(!request.result.objectStoreNames.contains(name)) {const store=request.result.createObjectStore(name,{keyPath:'id'}); if(name==='workouts') {store.createIndex('sessionId','sessionId',{unique:true}); store.createIndex('startedAt','startedAt');}}const meta=request.transaction!.objectStore('meta'),previous=meta.get('app');previous.onsuccess=()=>{if(previous.result)meta.put({...previous.result,schemaVersion:2});};};
       request.onblocked=()=>{clearTimeout(timeout); reject(new Error('数据库升级被其他窗口阻止。请关闭旧窗口后重试。'));};
       request.onerror=()=>{clearTimeout(timeout); reject(new Error('本机数据库不可用。请保留网站数据并尝试普通浏览模式。'));};
       request.onsuccess=()=>{clearTimeout(timeout); this.database=request.result; this.database.onversionchange=()=>{this.database?.close(); this.database=undefined; this.channel?.postMessage({type:'versionchange'});}; resolve();};
@@ -54,7 +54,7 @@ export class Repository {
               if(JSON.stringify(array)===before.get(name)) continue;
               const store=tx.objectStore(name); store.clear(); for(const item of array) store.put(item);
             }
-            tx.objectStore('meta').put({id:'app',revision:result.revision,schemaVersion:1,lastBackupAt:result.lastBackupAt});
+            tx.objectStore('meta').put({id:'app',revision:result.revision,schemaVersion:2,lastBackupAt:result.lastBackupAt});
           } catch(error) {failure=error;tx.abort();}
         };
       }

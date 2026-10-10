@@ -1,3 +1,4 @@
+import {validateTrainingDefinition} from './plan-definition.ts';
 import type {Backup, Course, Snapshot, Workout} from './types.ts';
 const fail = (message: string): never => {throw new Error(message);};
 const object = (x: unknown): Record<string,unknown> => x!==null && typeof x==='object' && !Array.isArray(x) ? x as Record<string,unknown> : fail('备份包含无效对象。');
@@ -17,6 +18,7 @@ export function validateCourse(input: unknown): asserts input is Course {
 export function validateWorkout(input: unknown): asserts input is Workout {
   const w=entity(input), f=object(w.feedback);
   if (!id(w.sessionId)||!str(w.title,60)||!iso(w.startedAt)||!iso(w.endedAt)||Date.parse(w.endedAt as string)<Date.parse(w.startedAt as string)||!num(w.activeDurationSeconds,1,21600)||!num(w.workDurationSeconds,0,w.activeDurationSeconds as number)||!['completed','ended-early'].includes(String(w.completionStatus))||!['guided','manual-entry'].includes(String(w.captureSource))) fail('记录的时间、来源或状态无效。');
+  if(f.assessed!==undefined&&typeof f.assessed!=='boolean')fail('训练感受状态无效。');
   if (!num(f.rpe,0,10)||typeof f.discomfort!=='boolean'||!str(f.note,300)||!['stable','practice'].includes(String(f.technique))||!['good','tired'].includes(String(f.feeling))) fail('请检查用力程度、动作感受和备注（最多 300 字）。');
   if (w.course!==undefined) validateCourse(w.course);
   if (w.captureSource==='guided' && !w.course) fail('跟练记录缺少课程快照。');
@@ -29,14 +31,14 @@ export function validateWorkout(input: unknown): asserts input is Workout {
 }
 export function validateSnapshot(input: unknown): asserts input is Snapshot {
   const s=object(input);
-  if (s.schemaVersion!==1||!num(s.revision,0,1e12)||!Number.isInteger(s.revision)) fail('不支持的数据结构版本。');
+  if (s.schemaVersion!==2||!num(s.revision,0,1e12)||!Number.isInteger(s.revision)) fail('不支持的数据结构版本。');
   for (const key of ['workouts','plans','scheduled','lessons']) {if (!Array.isArray(s[key])||(s[key] as unknown[]).length>10000) fail('数据数组或数量无效。'); const ids=new Set(); for (const v of s[key] as unknown[]) {const e=entity(v); if (ids.has(e.id)) fail('备份中存在重复 ID。'); ids.add(e.id);}}
   const sessions=new Set();
   for (const w of s.workouts as unknown[]) {validateWorkout(w); if (sessions.has(w.sessionId)) fail('存在重复训练会话。'); sessions.add(w.sessionId);}
   if (s.profile!==null) {const p=entity(s.profile); if (!['new','basic','regular'].includes(String(p.experience))||!['technique','aerobic','habit','interval'].includes(String(p.goal))||![2,3,4].includes(p.weeklyDays as number)||![15,20,30,45].includes(p.availableMinutes as number)||!str(p.machine,60)||!str(p.timeZone,80)||typeof p.sound!=='boolean') fail('训练偏好无效。'); try {new Intl.DateTimeFormat('en',{timeZone:p.timeZone as string});} catch {fail('时区无效。');}}
-  for (const value of s.plans as unknown[]) {const p=object(value); if (!['P01','P02','P03'].includes(String(p.templateId))||!str(p.title,60)||!['active','paused','completed'].includes(String(p.status))||!num(p.week,0,3)||!Number.isInteger(p.week)||!str(p.ruleVersion,80)||!str(p.templateVersion,80)||!str(p.reason,1000)||!validDate(p.startDate)||!str(p.timeZone,80)) fail('计划信息无效。'); try {new Intl.DateTimeFormat('en',{timeZone:p.timeZone as string});} catch {fail('计划时区无效。');}}
+  for (const value of s.plans as unknown[]) {const p=object(value); if(p.training!==undefined)validateTrainingDefinition(p.training);const total=(p.training as {weeks:number}|undefined)?.weeks??4;if(p.templateId==='FOCUSED'&&!p.training)fail('计划缺少训练定义。'); if (!['P01','P02','P03','FOCUSED'].includes(String(p.templateId))||!str(p.title,60)||!['active','paused','completed'].includes(String(p.status))||!num(p.week,0,total-1)||!Number.isInteger(p.week)||!str(p.ruleVersion,80)||!str(p.templateVersion,80)||!str(p.reason,1000)||!validDate(p.startDate)||!str(p.timeZone,80)) fail('计划信息无效。'); try {new Intl.DateTimeFormat('en',{timeZone:p.timeZone as string});} catch {fail('计划时区无效。');}}
   if ((s.plans as {status:string}[]).filter(p=>p.status==='active').length>1) fail('只能有一个活动计划。');
-  for (const value of s.scheduled as unknown[]) {const item=object(value); validateCourse(item.course); if (!id(item.planId)||!(s.plans as {id:string}[]).some(p=>p.id===item.planId)||!validDate(item.localDate)||!num(item.week,0,3)||!Number.isInteger(item.week)||!['planned','completed','skipped'].includes(String(item.status))) fail('计划日程或关联无效。'); if (item.linkedSessionId!==undefined && !(s.workouts as {id:string}[]).some(w=>w.id===item.linkedSessionId)) fail('日程关联的训练记录不存在。');}
+  for (const value of s.scheduled as unknown[]) {const item=object(value); if(item.slot!==undefined&&(!num(item.slot,0,3)||!Number.isInteger(item.slot)))fail('日程序号无效。'); validateCourse(item.course); if (!id(item.planId)||!(s.plans as {id:string}[]).some(p=>p.id===item.planId)||!validDate(item.localDate)||!num(item.week,0,((s.plans as {id:string;training?:{weeks:number}}[]).find(p=>p.id===item.planId)?.training?.weeks??4)-1)||!Number.isInteger(item.week)||!['planned','completed','skipped'].includes(String(item.status))) fail('计划日程或关联无效。'); if (item.linkedSessionId!==undefined && !(s.workouts as {id:string}[]).some(w=>w.id===item.linkedSessionId)) fail('日程关联的训练记录不存在。');}
   for (const value of s.lessons as unknown[]) {const l=object(value); if (!['setup','catch','drive','finish','recovery'].includes(String(l.id))||!iso(l.viewedAt)||!str(l.contentVersion,80)||!Array.isArray(l.selfChecks)||l.selfChecks.length!==4||!l.selfChecks.every(x=>typeof x==='boolean')) fail('学习进度无效。');}
   if (s.draft!==null) {const d=entity(s.draft); validateCourse(d.course); if (!['ready','running','paused','suspended','completed','ended-early'].includes(String(d.state))||!num(d.elapsedMs,0,(d.course as Course).plannedDurationSeconds*1000)||!iso(d.startedAt)||!str(d.owner,100)||!num(d.leaseUntil,0,1e15)||!num(d.revision,0,1e12)) fail('训练草稿无效。'); if(d.endedAt!==undefined&&!iso(d.endedAt)) fail('草稿结束时间无效。'); if(d.scheduledId!==undefined && !(s.scheduled as {id:string}[]).some(x=>x.id===d.scheduledId)) fail('草稿的日程关联不存在。');}
   if (s.lastBackupAt!==undefined && !iso(s.lastBackupAt)) fail('备份时间无效。');
@@ -47,8 +49,12 @@ export function parseBackup(text: string): Backup {
   let data: unknown;
   try {data=JSON.parse(text,(key,value)=>{if(['__proto__','prototype','constructor'].includes(key)) fail('文件包含不安全字段。'); return value;});} catch {return fail('文件不是有效的安全 JSON 备份。');}
   const b=object(data);
-  if (b.format!=='home-rower-backup'||b.exportVersion!==1||b.schemaVersion!==1||!iso(b.exportedAt)||!str(b.appVersion,40)||!str(b.contentVersion,80)) fail('备份格式或版本不支持，请检查文件或升级应用。');
+  if (b.format!=='home-rower-backup'||b.exportVersion!==1||![1,2].includes(b.schemaVersion as number)||!iso(b.exportedAt)||!str(b.appVersion,40)||!str(b.contentVersion,80)) fail('备份格式或版本不支持，请检查文件或升级应用。');
+  const snapshot=object(b.data);
+  if(snapshot.schemaVersion!==b.schemaVersion)fail('备份结构版本不一致。');
+  if(snapshot.schemaVersion===1){if(!Array.isArray(snapshot.plans)||(snapshot.plans as {templateId:string;training?:unknown}[]).some(p=>p.templateId==='FOCUSED'||p.training!==undefined))fail('旧备份含不兼容的计划。');snapshot.schemaVersion=2;}
   validateSnapshot(b.data);
+  b.schemaVersion=2;
   const counts=object(b.counts);
   for (const key of ['workouts','plans','scheduled','lessons'] as const) if(counts[key]!==b.data[key].length) fail('备份数量与内容不一致。');
   return structuredClone(data) as Backup;

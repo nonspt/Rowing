@@ -1,33 +1,40 @@
 # PROJECT_CONTEXT
 
-更新：2026-10-08。应用 **0.1.2 部署预览**，数据库结构 1，内容 1.0.0（用户确认），规则 plan-rules-1。
+更新：2026-10-10。应用 **0.2.0 预览版**，数据库 v2，旧课程内容 1.0.0，新计划定义 focused-1 / custom-1。
 
-## 已确认与当前事实
+## 用户确认范围
 
-- 家用划船机 PWA：教学、针对性课程、有氧及无氧方向计划、iOS 风格与系统深色模式。
-- 用户先要求文档，随后授权按照文档开始开发；首版手动记录，设备后续接入。
-- 用户授权上传至 nonspt/Rowing 并开启 GitHub Pages；仓库保存源码、锁文件、安装资源、测试、启动器与文档，Actions 自动构建部署。实际启用与线上验证见 CURRENT_STATUS。
-- GitHub Pages 已开启，0.1.2 HTTPS 预览已上线 https://nonspt.github.io/Rowing/；本地目录已关联 origin/main。云端测试、构建和部署通过；真实 iOS 仍待验。
-- 已实现四标签、10 门课程、三类四周模板、SVG 教学、跟练、计划、记录、备份、PWA 离线与更新。
-- 用户已确认训练内容，新增课程 / 计划使用内容版本 1.0.0；未声称第三方专业审核。旧 draft-1 快照和备份继续兼容，已有记录保留原值。
-- 按用户要求简化四页面，详细说明按需展开；动作图示依据 Concept2 官方规则统一为原创 SVG，学习支持六步动画。
-- 目标屏幕为 iPhone Air，完成浏览器参数模拟；没有 iOS 真机结果，整体仍 PARTIALLY DONE。
+- 当前只需要训练计划与跟练；允许删除教学、独立课程浏览、手动记录和统计。
+- 模板区分有氧 / 无氧，增加不同周期，自定义计划必须可创建与修改。
+- iOS 风格、系统深色、SVG 图示与 iPhone Air 参数模拟继续沿用。
+- 既有 nonspt/Rowing 与 GitHub Pages 发布授权持续有效。
 
-## 实际架构
+## 产品事实
 
-- React / React DOM 19.2.6、TypeScript 5.9.3、Vite 8.0.16；原生 CSS、SVG、SW，无额外 UI / 图标框架。
-- src/ui 展示；application 用例与控制器；domain 类型、规则、校验与计时；repositories 事务；adapters 导出、声音、常亮和 PWA。
-- src/content 是课程与教学的实现来源；[开发文档](../product/开发文档_V1.0.md)是设计依据；实际类型由 src/domain/types.ts 维护。
-- IndexedDB home-rower-db v1：profiles、lessonProgress、plans、scheduledSessions、drafts、workouts、meta；LocalStorage 只存主题。
-- 事务完成后才显示成功；修改前冻结比较基线，避免原地修改漏写。sessionId 唯一；草稿 owner / lease / revision 管理跨窗口。
-- 前台 performance.now 计时；隐藏或长间隔挂起，后台不补算。暂停草稿可主动接管，旧 revision 失效；其他窗口运行租约不可抢占。
-- 当前周主动进阶；日程和历史绑定课程快照，不随内容升级改写。
-- 备份采用保守合并，不提供覆盖、完整替换或删库重置；校验与 CAS 先于原子提交。
-- PWA 防止新旧 HTML / JS 混用；等待 worker 检查草稿后激活，接管后重载。
-- 静态资源使用相对 base、Hash 导航与相对 Manifest / SW scope，目标路径 /Rowing/。GitHub Pages 使用构建 HTML 的 CSP / Referrer 策略，不应用 _headers；决策见 ADR 0002。
+- 单页 #/plans，无底部导航或首次训练偏好表单。
+- 模板：轻松有氧、基础耐力、长时有氧；无氧适应、短间歇强化、无氧进阶。每种支持 2 / 4 / 6 / 8 / 12 周。
+- 自定义 1–52 周；有氧每周 1–4 次，无氧每周 1–2 次。调整热身、放松和主训练 / 间歇参数。
+- 当前计划、下一次跟练、周日程；可改日期、跳过、恢复、切换已保存计划和开启新一轮。
+- 自动推进到下一周；跳过不计完成，提前结束保存本次但该日程仍待完成。
+- 已有进度的自定义计划锁定类型、开始日期与频次，只修改待训练课程；已完成 / 跳过课程保持原快照。未改变频次或日期时保留用户调整的待训练日期。
+- 无氧跟练需主动确认已有基础与当日无疲劳 / 不适；实际训练间隔 ≥48h、日历周最多两次，H02 需先完成无不适的 H01。无氧模板含低强度有氧恢复课。
+- 设置：主题、声音、备份、安装与等待更新。
+- 新参数模板属于应用安排，没有宣称官方背书或第三方专业审核。旧已确认课程参数仍保留。
 
-## 入口与约定
+## 架构与数据
 
-[README](../../README.md)、[CURRENT_STATUS](CURRENT_STATUS.md)、[VALIDATION_REPORT](VALIDATION_REPORT.md)、[iPhone Air 模拟](IPHONE_AIR_ACCEPTANCE.md)、[动作图示](../product/动作图示规范.md)、[KNOWN_ISSUES](KNOWN_ISSUES.md)、[TECH_DEBT](TECH_DEBT.md)、[ADR](../architecture/ADR/0001-local-first-ios-pwa.md)、[依赖](../architecture/DEPENDENCIES.md)、[CHANGELOG](../../CHANGELOG.md)。
+- React / React DOM 19.2.6、TypeScript 5.9.3、Vite 8.0.16，原生 CSS / SVG / IndexedDB / SW，无新增依赖。
+- UI → application → domain → Repository → Storage；计时仍使用 SessionController 单调前台时钟与 owner / lease / revision 保护。
+- presets 定义模板；plan-definition 校验参数；focused-plans 生成完整周期与进度；plan-service 修改状态；旧四周生成器仅供旧计划兼容。
+- IndexedDB home-rower-db v2，沿用七个 store，升级只更新元数据；旧记录、课程快照、学习进度、草稿均保留。
+- 新 Plan 可选 training，旧计划缺该字段，按原四周日程继续；新 Scheduled 带 slot。备份导出 v2、导入 v1 / v2，版本一致性 / 数量 / 关联 / 参数严格校验，原子合并保留本机冲突。
+- 感受可不填：assessed=false，rpe=0 不代表用户自评；未输入设备指标保持 null。完整课程绑定日程，保存幂等。
+- LocalStorage 只保存主题。没有账号、遥测、云同步、自动运动评分或设备控制。
+- 保留旧数据字段及兼容规则，不提供重置数据库入口。v1 应用不兼容已经升级的 v2 数据库，回滚需 v2 兼容补丁，见 ADR 0003。
 
-先读本文件，再读 [AI_CODING_RULES](../standards/AI_CODING_RULES.md)。保护用户数据，不删库迁移、不在训练中强制更新；设备、云同步和发布等重大改变需说明影响并记录决策。
+## PWA 与发布
+
+- https://nonspt.github.io/Rowing/；Hash 页面、相对资源、Manifest id 保持 ./，start_url 改为 ./#/plans。
+- waiting worker 检查未完成跟练；允许更新后等待接管再重载。基础离线与本应用旧缓存清理继续保留。
+- Pages 工作流：锁文件安装、规则测试、SVG 审计、生产构建、子路径与 iPhone Air 操作验收、发布。
+- 发布和真实验证记录见 CURRENT_STATUS / VALIDATION_REPORT；iOS 真机结果仍缺失，预览版不宣称正式实机验收。

@@ -1,12 +1,12 @@
 {
   "name": "home-rower",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5188",
     "check": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/domain.test.ts",
+    "test": "node --experimental-strip-types --test tests/domain.test.ts tests/plans.test.ts",
     "test:browser": "node tests/browser.mjs",
     "build": "tsc --noEmit && node scripts/notices.mjs && vite build && node scripts/finalize-pwa.mjs",
     "preview": "node scripts/preview.mjs",

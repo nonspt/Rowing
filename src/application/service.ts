@@ -1,3 +1,5 @@
+import {adoptPlan,editCustomPlan,activatePlan,adjustPlanSession} from './plan-service.ts';
+import {focusedEligibility,syncPlanProgress,type PlanInput} from '../domain/focused-plans.ts';
 import {APP_VERSION, CONTENT_VERSION, newEntity} from '../domain/types.ts';
 import type {Backup, Course, Draft, Feedback, Profile, Snapshot, Workout} from '../domain/types.ts';
 import {canAdvancePlan, courseEligibility, localDate, previewPlan, scheduleWeek} from '../domain/plans.ts';
@@ -18,6 +20,13 @@ export class AppService {
   readonly repository:Repository;
   constructor(repository:Repository) {this.repository=repository;}
   private writable(state:Snapshot) {if(state.draft && state.draft.owner!==this.owner && state.draft.leaseUntil>Date.now()) throw new Error('其他窗口正在训练，请在原窗口暂停或稍后重试。');}
+  adoptFocusedPlan(input:PlanInput,revision:number) {return this.repository.update(s=>{this.writable(s);adoptPlan(s,input);},revision);}
+  editFocusedPlan(id:string,input:PlanInput,revision:number) {return this.repository.update(s=>{this.writable(s);editCustomPlan(s,id,input);},revision);}
+  activateFocusedPlan(id:string) {return this.repository.update(s=>{this.writable(s);activatePlan(s,id);});}
+  adjustFocusedSession(id:string,action:'move'|'skip'|'restore',date?:string) {return this.repository.update(s=>{this.writable(s);adjustPlanSession(s,id,action,date);});}
+  async beginScheduled(id:string,confirmed=false):Promise<Draft> {
+    const result=await this.repository.update(s=>{if(s.draft)throw new Error('请先恢复或结束上次跟练。');const item=s.scheduled.find(x=>x.id===id),plan=s.plans.find(x=>x.id===item?.planId);if(!item||item.status!=='planned'||plan?.status!=='active')throw new Error('计划日程已改变，请重新选择。');const reason=focusedEligibility(item.course,s,confirmed);if(reason)throw new Error(reason);s.draft={...newEntity(),course:structuredClone(item.course),state:'ready',elapsedMs:0,startedAt:new Date().toISOString(),scheduledId:id,owner:this.owner,leaseUntil:Date.now()+15000,revision:0};});return result.draft!;
+  }
   saveProfile(profile:Profile) {return this.repository.update(s=>{this.writable(s);s.profile=profile;});}
   saveLesson(id:string,checks:boolean[]) {return this.repository.update(s=>{this.writable(s);const old=s.lessons.find(l=>l.id===id),now=new Date().toISOString();s.lessons=s.lessons.filter(l=>l.id!==id);s.lessons.push({...newEntity(id),createdAt:old?.createdAt||now,version:(old?.version||0)+1,viewedAt:now,contentVersion:CONTENT_VERSION,selfChecks:checks});});}
   usePlan(templateId:string,expectedRevision:number) {return this.repository.update(s=>{this.writable(s);if(s.draft) throw new Error('先保存或结束当前训练，再切换计划。');const generated=previewPlan(templateId,s,localDate(new Date(),s.profile?.timeZone));for(const p of s.plans) if(p.status==='active') {p.status='paused';p.updatedAt=new Date().toISOString();p.version++;}s.plans.push(generated.plan);s.scheduled.push(...generated.sessions);},expectedRevision);}
@@ -34,12 +43,12 @@ export class AppService {
     if(!s.draft||s.draft.id!==draft.id||s.draft.owner!==this.owner||s.draft.revision!==draft.revision)throw new Error('草稿已改变，请恢复最新训练后保存。');
     const seconds=Math.floor(draft.elapsedMs/1000); let remaining=draft.elapsedMs/1000;
     const record:Workout={...newEntity(draft.id),sessionId:draft.id,scheduledId:draft.scheduledId,title:draft.course.title,startedAt:draft.startedAt,endedAt:draft.endedAt||new Date().toISOString(),completionStatus:draft.state==='completed'?'completed':'ended-early',captureSource:'guided',activeDurationSeconds:seconds,workDurationSeconds:workSeconds(draft),course:draft.course,feedback,metrics:metricsFromInput(input,seconds),stageResults:draft.course.stages.map(stage=>{const actual=Math.min(stage.durationSeconds,Math.max(0,remaining));remaining-=stage.durationSeconds;return {stageId:stage.id,actualSeconds:actual,status:actual===stage.durationSeconds?'completed':actual>0?'partial':'skipped'};})};
-    validateWorkout(record);s.workouts.push(record);const item=s.scheduled.find(x=>x.id===draft.scheduledId);if(item){item.linkedSessionId=record.id;if(record.completionStatus==='completed')item.status='completed';item.updatedAt=record.updatedAt;item.version++;}s.draft=null;
+    validateWorkout(record);s.workouts.push(record);const item=s.scheduled.find(x=>x.id===draft.scheduledId);if(item){item.linkedSessionId=record.id;if(record.completionStatus==='completed')item.status='completed';item.updatedAt=record.updatedAt;item.version++;const plan=s.plans.find(p=>p.id===item.planId);if(plan)syncPlanProgress(plan,s);}s.draft=null;
   });}
   saveManual(record:Workout,expectedVersion?:number) {validateWorkout(record);return this.repository.update(s=>{this.writable(s);const old=s.workouts.find(w=>w.id===record.id);if(expectedVersion!==undefined&&old?.version!==expectedVersion)throw new Error('记录已改变，请重新打开后编辑。');if(!old&&s.workouts.some(w=>w.sessionId===record.sessionId))throw new Error('训练会话已存在。');s.workouts=s.workouts.filter(w=>w.id!==record.id);s.workouts.push(record);});}
   deleteWorkout(id:string) {return this.repository.update(s=>{this.writable(s);s.workouts=s.workouts.filter(w=>w.id!==id);for(const x of s.scheduled) if(x.linkedSessionId===id){delete x.linkedSessionId;if(x.status==='completed')x.status='planned';x.version++;x.updatedAt=new Date().toISOString();}});}
   discardDraft() {return this.repository.update(s=>{this.writable(s);s.draft=null;});}
-  async backup():Promise<Backup> {const data=await this.repository.read();if(data.draft){data.draft={...data.draft,owner:'',leaseUntil:0,state:data.draft.state==='running'?'suspended':data.draft.state};}return {format:'home-rower-backup',exportVersion:1,schemaVersion:1,appVersion:APP_VERSION,contentVersion:CONTENT_VERSION,exportedAt:new Date().toISOString(),counts:{workouts:data.workouts.length,plans:data.plans.length,scheduled:data.scheduled.length,lessons:data.lessons.length},data};}
+  async backup():Promise<Backup> {const data=await this.repository.read();if(data.draft){data.draft={...data.draft,owner:'',leaseUntil:0,state:data.draft.state==='running'?'suspended':data.draft.state};}return {format:'home-rower-backup',exportVersion:1,schemaVersion:2,appVersion:APP_VERSION,contentVersion:CONTENT_VERSION,exportedAt:new Date().toISOString(),counts:{workouts:data.workouts.length,plans:data.plans.length,scheduled:data.scheduled.length,lessons:data.lessons.length},data};}
   markBackup() {return this.repository.update(s=>{s.lastBackupAt=new Date().toISOString();});}
   importBackup(backup:Backup,expectedRevision:number) {return this.repository.update(s=>{
     this.writable(s);if(s.draft)throw new Error('先保存或丢弃当前草稿，再导入备份。');

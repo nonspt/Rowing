@@ -36,7 +36,7 @@ test('内容确认升级兼容旧草案快照，不改写已保存记录',()=>{
   validateCourse(courseById('T01'));assert.throws(()=>validateCourse({...old,status:'unknown'}));
   const state=emptySnapshot();state.draft={...draft(),course:old,state:'paused'};
   const backup:Backup={format:'home-rower-backup',exportVersion:1,schemaVersion:1,appVersion:'0.1.0',contentVersion:'draft-1',exportedAt:new Date().toISOString(),counts:{workouts:0,plans:0,scheduled:0,lessons:0},data:state};
-  assert.equal(parseBackup(JSON.stringify(backup)).data.draft?.course.contentVersion,'draft-1');
+  assert.equal(parseBackup(JSON.stringify({...backup,data:{...state,schemaVersion:1}})).data.draft?.course.contentVersion,'draft-1');
 });
 test('10 门课程及全部 12 行计划符合文档时长，恢复段包含最后一次',()=>{
   assert.deepEqual(courses.map(c=>c.plannedDurationSeconds/60),[14,16,15,25,24,30,26,25,25,12]);
@@ -82,9 +82,9 @@ test('高强度条件、48 小时间隔与进阶体验要求',()=>{
 });
 test('备份验证拒绝未来版本、重复会话、错误计数与危险字段',()=>{
   const data=emptySnapshot();data.profile=profile();data.workouts=[workout()];
-  const backup:Backup={format:'home-rower-backup',exportVersion:1,schemaVersion:1,appVersion:APP_VERSION,contentVersion:CONTENT_VERSION,exportedAt:new Date().toISOString(),counts:{workouts:1,plans:0,scheduled:0,lessons:0},data};
+  const backup:Backup={format:'home-rower-backup',exportVersion:1,schemaVersion:2,appVersion:APP_VERSION,contentVersion:CONTENT_VERSION,exportedAt:new Date().toISOString(),counts:{workouts:1,plans:0,scheduled:0,lessons:0},data};
   assert.equal(parseBackup(JSON.stringify(backup)).data.workouts.length,1);
-  assert.throws(()=>parseBackup(JSON.stringify({...backup,schemaVersion:2})));
+  assert.throws(()=>parseBackup(JSON.stringify({...backup,schemaVersion:3})));
   assert.throws(()=>parseBackup(JSON.stringify({...backup,counts:{...backup.counts,workouts:2}})));
   assert.throws(()=>parseBackup('{"__proto__":{}}'));
   const duplicate=structuredClone(backup);duplicate.data.workouts.push({...data.workouts[0],id:crypto.randomUUID()});duplicate.counts.workouts++;assert.throws(()=>parseBackup(JSON.stringify(duplicate)));
