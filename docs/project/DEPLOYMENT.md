@@ -1,14 +1,14 @@
 # GitHub Pages 部署
 
-2026-10-10；0.2.1 预览。仓库：[nonspt/Rowing](https://github.com/nonspt/Rowing)，在线应用：[划船机](https://nonspt.github.io/Rowing/)。
+2026-10-10；0.2.2 预览。仓库：[nonspt/Rowing](https://github.com/nonspt/Rowing)，在线应用：[划船机](https://nonspt.github.io/Rowing/)。
 
-0.2.1 已上线，构建 574b04a5eee2；[本轮部署](https://github.com/nonspt/Rowing/actions/runs/38015431425)通过。线上 HTTPS 200 与 iPhone Air 9+13 组已独立核验，0 pageerror。
+0.2.2 已上线，构建 574c08e6a7ee；[本轮部署](https://github.com/nonspt/Rowing/actions/runs/38017640447)通过。线上 HTTPS 200、双主题与 iPhone Air 参数下的逐阶段用力 / 下一段已独立核验，0 pageerror。云端完整执行 10+13 组功能 / 布局验收。
 
 Pages 已在此前由用户开启，Source 为 GitHub Actions；本轮无需重复设置。main 更新自动测试、构建、发布。
 
 ## 构建与路径
 
-工作流使用 Ubuntu 24.04、Node 24、pnpm 11.25.0，第三方 Action 固定提交；依次执行锁文件安装、21 项规则、SVG 审计、生产构建、/Rowing/ 子路径与 iPhone Air 完整操作 / 布局、上传 dist 与 Pages 发布。构建 contents:read，部署 pages:write / id-token:write。
+工作流使用 Ubuntu 24.04、Node 24、pnpm 11.25.0，第三方 Action 固定提交；依次执行锁文件安装、22 项规则、SVG 审计、生产构建、/Rowing/ 子路径与 iPhone Air 完整操作 / 布局、上传 dist 与 Pages 发布。构建 contents:read，部署 pages:write / id-token:write。
 
 仅提交源码、锁文件、安装资源、脚本、测试与维护文档；不上传 node_modules、dist、test-results、.env 或用户备份。
 
@@ -18,7 +18,7 @@ Pages 不读取 _headers；构建 HTML 在脚本之前设置 CSP 与 no-referrer
 
 ## 发布验收
 
-pnpm test:pages 挂载无自定义 HTTP 安全头的 /Rowing/，检查路径、图标、SW、CSP、离线与 iPhone Air 9+13 组流程。线上通过 APP_URL 指向 HTTPS 后独立核验界面、模板 / 自定义、跟练、存储、备份、深色及离线。
+pnpm test:pages 挂载无自定义 HTTP 安全头的 /Rowing/，检查路径、图标、SW、CSP、离线与 iPhone Air 10+13 组流程。线上可通过 APP_URL 指向 HTTPS 后独立核验；本轮直接验证部署指纹、双主题和无氧逐阶段跟练，已执行范围见 VALIDATION_REPORT。
 
 报告在忽略的 test-results，测试使用隔离浏览器与合成数据。真实 iOS Safari / 主屏仍需实际设备。
 

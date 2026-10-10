@@ -12,6 +12,9 @@
 - SVG 审计 12 个 UI / CSS 源文件，0 问题；JS + CSS gzip 84.4KiB，11 项离线资源 320.9KiB，相对 0.2.1 增加 0.3 / 1.4KiB。
 - 初次新无氧断言在训练开始完成前推进虚拟时钟，第二次将既有“轻松恢复”误写为“恢复”。等待真实运行按钮并使用原有阶段文案后，完整验收重跑通过；未修改计时、阶段规则或放宽预期。
 - 真实 iOS Safari / 主屏、VoiceOver 与锁屏声音仍待设备验证。本轮为 Chromium 参数模拟。
+- 修改文件：src/domain/effort.ts（16 级换算）、src/ui/pages/Session.tsx 与 styles/app.css（信息层级）、版本常量 / package.json、四份规则 / 浏览器 / 手机 / PWA 测试及项目文档；无新增依赖或数据结构变更。
+
+线上与云端结果（0.2.2）：[GitHub Actions](https://github.com/nonspt/Rowing/actions/runs/38017640447)构建与发布通过；HTTPS 200，构建 **574c08e6a7ee** 与本地一致。隔离浏览器按 420×912 / DPR 3 核验双主题和 H01 实际计时：热身 3–5 /16 → 工作 11–13 /16 → 恢复 3–5 /16 → 放松 3–5 /16，下一段类型 / 时长同步切换，最后一段正确。课程原值保持 [7,8]，0 pageerror。截图与报告位于 test-results/live-effort，不提交合成测试数据。
 
 ## 0.2.1 训练计划精简 — 2026-10-10
 

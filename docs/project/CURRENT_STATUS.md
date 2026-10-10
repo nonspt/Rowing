@@ -2,7 +2,7 @@
 
 更新：2026-10-10。当前 **0.2.2 预览版**。
 
-预览地址：[打开应用](https://nonspt.github.io/Rowing/#/plans)。当前构建 **574c08e6a7ee**，发布使用 [GitHub Actions](https://github.com/nonspt/Rowing/actions/workflows/pages.yml)。本轮本地 22 项规则、iPhone Air 10+13 组和 PWA 5 组已通过，0 pageerror；线上验证结果归档于 VALIDATION_REPORT。
+线上已发布：[打开应用](https://nonspt.github.io/Rowing/#/plans)。构建 **574c08e6a7ee**，[云端测试与部署](https://github.com/nonspt/Rowing/actions/runs/38017640447)通过。本地 22 项规则、iPhone Air 10+13 组和 PWA 5 组已通过；线上 HTTPS 200、构建一致，双主题和无氧逐阶段用力 / 下一段独立核验通过，0 pageerror。详见 VALIDATION_REPORT。
 
 本轮已实现用户要求的精简范围：训练计划 + 跟练。六种有氧 / 无氧模板支持 2、4、6、8、12 周，自定义支持 1–52 周；原多页功能入口已删除。
 
