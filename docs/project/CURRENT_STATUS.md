@@ -1,10 +1,12 @@
 # CURRENT_STATUS
 
-更新：2026-10-10。当前 **0.2.1 预览版**。
+更新：2026-10-10。当前 **0.2.2 预览版**。
 
-线上已发布 0.2.1：[打开应用](https://nonspt.github.io/Rowing/#/plans)。构建 **574b04a5eee2**，[云端测试与部署](https://github.com/nonspt/Rowing/actions/runs/38015431425)通过；直接对线上地址执行 iPhone Air 9+13 组完整流程通过，0 pageerror。
+预览地址：[打开应用](https://nonspt.github.io/Rowing/#/plans)。当前构建 **574c08e6a7ee**，发布使用 [GitHub Actions](https://github.com/nonspt/Rowing/actions/workflows/pages.yml)。本轮本地 22 项规则、iPhone Air 10+13 组和 PWA 5 组已通过，0 pageerror；线上验证结果归档于 VALIDATION_REPORT。
 
 本轮已实现用户要求的精简范围：训练计划 + 跟练。六种有氧 / 无氧模板支持 2、4、6、8、12 周，自定义支持 1–52 周；原多页功能入口已删除。
+
+跟练用力上限 16，按原目标 ×1.6 四舍五入，阶段切换时自动显示；旧草稿同样适配。放大当前用力与下一段类型 / 时长，动作提示缩小。保持无图示和 ≥64px 操作按钮。
 
 | 范围 | 状态 | 验证 |
 | --- | --- | --- |

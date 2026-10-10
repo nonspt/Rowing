@@ -16,7 +16,7 @@ export type Plan = Entity & {templateId: string; title: string; startDate: strin
 export type Scheduled = Entity & {planId: string; localDate: string; week: number; slot?:number; course: Course; status: 'planned' | 'skipped' | 'completed'; linkedSessionId?: string};
 export type Snapshot = {schemaVersion: 2; revision: number; profile: Profile | null; lessons: LessonProgress[]; plans: Plan[]; scheduled: Scheduled[]; draft: Draft | null; workouts: Workout[]; lastBackupAt?: string};
 export type Backup = {format: 'home-rower-backup'; exportVersion: 1; schemaVersion: 1 | 2; appVersion: string; contentVersion: string; exportedAt: string; counts: {workouts: number; scheduled: number; lessons: number; plans: number}; data: Snapshot};
-export const APP_VERSION = '0.2.1';
+export const APP_VERSION = '0.2.2';
 export const CONTENT_VERSION = '1.0.0';
 export const newEntity = (id: string = crypto.randomUUID()): Entity => {const now = new Date().toISOString(); return {id, createdAt: now, updatedAt: now, version: 1};};
 export const emptySnapshot = (): Snapshot => ({schemaVersion: 2, revision: 0, profile: null, lessons: [], plans: [], scheduled: [], draft: null, workouts: []});

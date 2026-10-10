@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {courses,courseById,planTemplates} from '../src/content/courses.ts';
 import {advance,currentStage,workSeconds} from '../src/domain/session.ts';
+import {followEffort,FOLLOW_EFFORT_MAX} from '../src/domain/effort.ts';
 import {emptySnapshot,newEntity,APP_VERSION,CONTENT_VERSION} from '../src/domain/types.ts';
 import type {Backup,Draft,Profile,Workout} from '../src/domain/types.ts';
 import {addDays,canAdvancePlan,courseEligibility,intervalEligibility,previewPlan,weekStart,weekStats} from '../src/domain/plans.ts';
@@ -12,6 +13,13 @@ import {Repository} from '../src/repositories/repository.ts';
 const profile=():Profile=>({...newEntity('profile'),experience:'new',goal:'technique',weeklyDays:3,availableMinutes:30,machine:'通用',timeZone:'Asia/Shanghai',sound:false});
 const draft=():Draft=>({...newEntity(),course:courseById('T01'),state:'running',elapsedMs:0,startedAt:new Date().toISOString(),owner:'test',leaseUntil:Date.now()+15000,revision:0});
 const workout=():Workout=>({...newEntity(),sessionId:crypto.randomUUID(),title:'测试',startedAt:new Date().toISOString(),endedAt:new Date().toISOString(),completionStatus:'completed',captureSource:'manual-entry',activeDurationSeconds:900,workDurationSeconds:0,stageResults:[],feedback:{rpe:4,discomfort:false,note:'',technique:'stable',feeling:'good'},metrics:{distance:null,pace:null}});
+test('跟练 16 级用力按比例四舍五入，覆盖各阶段并保留原课程数据',()=>{
+  assert.equal(FOLLOW_EFFORT_MAX,16);
+  for(const [input,expected]of [[[0,0],[0,0]],[[2,3],[3,5]],[[3,4],[5,6]],[[4,5],[6,8]],[[4,6],[6,10]],[[6,7],[10,11]],[[7,8],[11,13]],[[10,10],[16,16]]] as const)assert.deepEqual(followEffort(input),expected);
+  const original=structuredClone(courses);
+  for(const course of courses)for(const stage of course.stages){const [min,max]=followEffort(stage.rpe);assert.ok(min>=0&&min<=max&&max<=16);}
+  assert.deepEqual(courses,original);
+});
 test('官方动作规则：固定肢段、水平手柄路径、驱动及回桨顺序',()=>{
   const distance=(a:{x:number;y:number},b:{x:number;y:number})=>Math.hypot(a.x-b.x,a.y-b.y);
   const catchPose=rowingPose(0),finish=rowingPose(.36);
