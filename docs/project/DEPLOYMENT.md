@@ -2,6 +2,8 @@
 
 2026-10-10；0.2.1 预览。仓库：[nonspt/Rowing](https://github.com/nonspt/Rowing)，在线应用：[划船机](https://nonspt.github.io/Rowing/)。
 
+0.2.1 已上线，构建 574b04a5eee2；[本轮部署](https://github.com/nonspt/Rowing/actions/runs/38015431425)通过。线上 HTTPS 200 与 iPhone Air 9+13 组已独立核验，0 pageerror。
+
 Pages 已在此前由用户开启，Source 为 GitHub Actions；本轮无需重复设置。main 更新自动测试、构建、发布。
 
 ## 构建与路径

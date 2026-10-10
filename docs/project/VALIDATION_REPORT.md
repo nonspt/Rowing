@@ -14,7 +14,7 @@
 - 初次专用验收遇到 DPR 浮点值与异步关闭焦点的测试比较问题；改用倍率容差、等待真实模态关闭后再验焦点，完整重跑通过。没有放宽布局或数据标准。
 - 真实 iOS Safari / 主屏、VoiceOver、锁屏与移动性能仍未执行。旧版结果保留在下方，不代表当前已删除功能的验收。
 
-线上部署与发布后结果见 CURRENT_STATUS / Actions；本地、云端与线上应分别记录。
+线上与云端结果（0.2.1）：[GitHub Actions](https://github.com/nonspt/Rowing/actions/runs/38015431425)构建及发布通过；HTTPS 200、构建 574b04a5eee2 与本地一致，Manifest start_url / scope 正确。直接对线上地址执行完整 iPhone Air 9+13 组通过，包括自定义有氧 / 无氧、无图示与 64px 按钮、完整跟练、实际 v1 数据升级、备份和离线，0 pageerror。仅使用隔离浏览器与合成数据。
 
 ## 0.1.2 部署准备 — 2026-10-08
 
