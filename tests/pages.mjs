@@ -51,14 +51,16 @@ try{
   assert.equal(await page.getByRole('navigation').count(),0);
   await context.setOffline(false);assert.deepEqual(errors,[]);
   await browser.close();browser=undefined;
-  const code=await new Promise((resolve,reject)=>{
-    const child=spawn(process.execPath,['tests/iphone-air.mjs'],{env:{...process.env,APP_URL:url},stdio:'inherit'});
-    child.once('error',reject);child.once('close',resolve);
-  });
-  assert.equal(code,0,'Pages 子目录下完整 iPhone Air 流程');
+  for(const script of ['tests/iphone-air.mjs','tests/ipad-mini.mjs']){
+    const code=await new Promise((resolve,reject)=>{
+      const child=spawn(process.execPath,[script],{env:{...process.env,APP_URL:url},stdio:'inherit'});
+      child.once('error',reject);child.once('close',resolve);
+    });
+    assert.equal(code,0,'Pages 子目录下 '+script);
+  }
   await fs.mkdir('test-results',{recursive:true});
   await fs.writeFile('test-results/pages-report.json',JSON.stringify({url,scope:sw,manifestScope:base,htmlCsp:policy,offlinePlans:true,pageErrors:errors},null,2));
-  console.log('PASS Pages 子路径、安装图标、SW scope、HTML CSP、单页离线及 iPhone Air 完整流程');
+  console.log('PASS Pages 子路径、安装图标、SW scope、HTML CSP、单页离线及 iPhone Air / iPad mini 完整流程');
 }finally{
   if(browser)await browser.close();
   await new Promise((resolve,reject)=>{server.close(error=>error?reject(error):resolve());server.closeAllConnections();});

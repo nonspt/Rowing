@@ -1,6 +1,6 @@
 {
   "name": "home-rower",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,6 +13,7 @@
     "test:pwa": "node tests/pwa-capacity.mjs",
     "audit:licenses": "node scripts/licenses.mjs",
     "test:iphone-air": "node tests/iphone-air.mjs",
+    "test:ipad-mini": "node tests/ipad-mini.mjs",
     "test:pages": "node tests/pages.mjs",
     "audit:svg": "node scripts/audit-svg.mjs"
   },
