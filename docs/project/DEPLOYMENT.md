@@ -2,7 +2,7 @@
 
 2026-10-12；0.2.3 预览。仓库：[nonspt/Rowing](https://github.com/nonspt/Rowing)，在线应用：[划船机](https://nonspt.github.io/Rowing/)。
 
-0.2.3 构建 9130aafde932；本地 /Rowing/ 下 iPhone Air 10+13 组、iPad mini 15 组通过。推送后 [Actions](https://github.com/nonspt/Rowing/actions/workflows/pages.yml)自动测试与发布，线上结果归档于 VALIDATION_REPORT。
+0.2.3 构建 **9130aafde932**；本地 /Rowing/ 下 iPhone Air 10+13 组、iPad mini 15 组通过。[Actions 38199385064](https://github.com/nonspt/Rowing/actions/runs/38199385064)规则、SVG、构建、手机 / 平板验收及部署通过。线上 HTTPS 200、构建与本地一致；直接对线上地址执行完整 iPad mini 15 组通过，0 pageerror，含双主题、自定义计划、实际计时 / 保存、离线重开。详细结果归档于 VALIDATION_REPORT。
 
 Pages 已在此前由用户开启，Source 为 GitHub Actions；本轮无需重复设置。main 更新自动测试、构建、发布。
 

@@ -15,6 +15,8 @@
 - 修改文件：Sheet、Plans、PlanLibrary、PlanEditor、Session、app.css；版本常量 / package.json；ipad-mini / pages 验收、部署工作流及项目文档。缓存与训练逻辑沿用。
 - [iPad 参数与局限](IPAD_MINI_ACCEPTANCE.md)。本轮为 Chromium 模拟，不宣称真实 iPadOS Safari / 主屏 / VoiceOver / 锁屏验收通过。
 
+线上与云端结果（0.2.3）：[GitHub Actions](https://github.com/nonspt/Rowing/actions/runs/38199385064)规则、SVG 审计、构建、iPhone / iPad 验收与部署通过；HTTPS 200，构建 **9130aafde932** 与本地一致。直接对线上地址执行完整 iPad mini **15 组**通过：2266×1488 截图、横屏 / 工具栏 / 竖屏 / 分屏 × 双主题、200% 字体、缩短高度填写、创建 / 编辑 / 刷新、实际开始 / 暂停 / 结束 / 保存、离线重开与原生弹层焦点，0 pageerror。线上浅色与深色跟练截图已人工查看。报告和截图在 test-results/ipad-mini，使用隔离浏览器与合成数据，不上传用户数据；本轮线上手机全流程未重复执行，手机回归在本地和云端通过。
+
 ## 0.2.2 跟练 16 级用力与信息层级 — 2026-10-10
 
 - 构建 **574c08e6a7ee**；Node 24.19.0、Windows Chrome headless 135.0.7049.85。无新增依赖，课程与反馈仍保留原 0–10 数据，数据库 / 备份格式不变。
