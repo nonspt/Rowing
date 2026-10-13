@@ -2,6 +2,8 @@
 
 2026-10-13；1.1.0 正式版。仓库：[nonspt/Rowing](https://github.com/nonspt/Rowing)，在线应用：[划船机](https://nonspt.github.io/Rowing/)。
 
+1.1.0 构建 **aea32d498f64**。[Actions 38359739651](https://github.com/nonspt/Rowing/actions/runs/38359739651) 规则、SVG、构建、72 组页面验收与部署成功。线上 HTTPS 200、设置版本 1.1.0、Service Worker /Rowing/sw.js，构建与本地一致；直接线上 iPad 15、组合 7、UI / 删除 11、计次 7、全屏布局 6、编辑 / 模板 3，共 49 组通过、0 pageerror。
+
 1.0.0 构建 **67ee0b60a73b**。[Actions 38346540301](https://github.com/nonspt/Rowing/actions/runs/38346540301)规则、SVG、构建、63 组页面验收与部署成功。线上 HTTPS 200、设置版本 1.0.0、构建与本地一致；直接线上 UI / 删除 11、计次 / 完整时间线 7、iPad 15、组合 7，共 40 组通过、0 pageerror。下面保留历史发布记录。
 
 0.3.0 构建 **9cae958e7d5d**。[Actions 38336038016](https://github.com/nonspt/Rowing/actions/runs/38336038016)规则、SVG、构建、手机 / 平板 / 组合验收与部署通过。线上 HTTPS 200、设置版本 0.3.0、构建一致；直接线上 iPad 15 + 组合 7 组通过，含完整 27 分钟课程、徒手暂停 / 刷新恢复、实际备份导入、自定义 / 旧计划、手机恢复及离线，0 pageerror。证据见 VALIDATION_REPORT。
@@ -10,7 +12,7 @@
 
 Pages 已在此前由用户开启，Source 为 GitHub Actions；本轮无需重复设置。main 更新自动测试、构建、发布。
 
-1.1.0 构建 aea32d498f64；本地 41 项规则、SVG、72 组页面回归、PWA 5 组、生产依赖与许可检查通过。发布与线上复核进行中；以下保留历史结果。
+1.1.0 构建 aea32d498f64；本地 41 项规则、SVG、72 组页面回归、PWA 5 组、生产依赖与许可检查通过。发布与线上 49 组复核通过；详细证据见 VALIDATION_REPORT。
 
 ## 构建与路径
 
