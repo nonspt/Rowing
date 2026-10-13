@@ -1,7 +1,7 @@
 import {chromium} from 'playwright-core';
 export const appURL=process.env.APP_URL||'http://localhost:5188/';
 export const launch=()=>chromium.launch({executablePath:process.env.CHROME_PATH||'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',headless:true});
-export const dialog=page=>page.locator('dialog[open]').last();
+export const dialog=page=>page.locator('[data-session-page],dialog[open]').last();
 export const readState=page=>page.evaluate(()=>new Promise((resolve,reject)=>{
   const request=indexedDB.open('home-rower-db');request.onerror=()=>reject(request.error);
   request.onsuccess=()=>{const db=request.result,names=['profiles','lessonProgress','plans','scheduledSessions','drafts','workouts','meta'],tx=db.transaction(names,'readonly'),state={version:db.version};for(const name of names){const r=tx.objectStore(name).getAll();r.onsuccess=()=>state[name]=r.result;}tx.oncomplete=()=>{db.close();resolve(state);};tx.onabort=()=>reject(tx.error);};

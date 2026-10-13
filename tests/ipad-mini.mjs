@@ -5,7 +5,7 @@ import {launch,appURL,dialog,readState,useTemplate} from './ui-helpers.mjs';
 const output='test-results/ipad-mini';await fs.mkdir(output,{recursive:true});
 const browser=await launch(),context=await browser.newContext({viewport:{width:1133,height:744},screen:{width:1133,height:744},deviceScaleFactor:2,isMobile:true,hasTouch:true,colorScheme:'light'}),page=await context.newPage(),errors=[],results=[];
 page.on('pageerror',e=>errors.push(e.message));
-const closed=()=>page.waitForFunction(()=>!document.querySelector('dialog[open]'));
+const closed=()=>page.waitForFunction(()=>!document.querySelector('dialog[open],[data-session-page]'));
 const layout=async label=>{
   const issues=await page.evaluate(()=>{
     const issues=[],active=[...document.querySelectorAll('dialog[open]')].at(-1)||document.querySelector('main');
@@ -27,12 +27,12 @@ const follow=async(landscape=false)=>{
   await page.getByRole('button',{name:'进入跟练',exact:true}).click();await dialog(page).getByRole('button',{name:'开始跟练'}).waitFor();await layout('follow');
   assert.equal(await dialog(page).locator('.effort-max').innerText(),'/ 16');assert.equal(await dialog(page).getByRole('img').count(),0);
   if(landscape){
-    await beside('.timer-area','.session-targets');
+    await beside('.session-structure','.session-main');await beside('.session-main','.session-targets');const columns=await Promise.all(['.session-structure','.session-main','.session-targets'].map(s=>dialog(page).locator(s).boundingBox()));assert.ok(columns[1].width>columns[0].width*1.4&&columns[1].width>columns[2].width*1.4);
     const bounds=await dialog(page).boundingBox();assert.ok(Math.abs(bounds.width-(await page.evaluate(()=>innerWidth)))<1);
     const limits=await page.evaluate(()=>({height:innerHeight,bottom:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom'))||0}));
-    const header=await dialog(page).locator('.sheet-header').boundingBox();for(const selector of ['.session-top','.current-movement','.timer','.effort-reading','.next-reading','.session-queue']){const b=await dialog(page).locator(selector).boundingBox();assert.ok(b.y>=header.y+header.height-1,selector+' not covered by header');assert.ok(b.y+b.height<=limits.height-limits.bottom+1,selector+' visible without scrolling');}
-    for(const label of ['开始跟练','结束跟练']){const b=await dialog(page).getByRole('button',{name:label,exact:true}).boundingBox();assert.ok(b.height>=72);assert.ok(b.y>=0&&b.y+b.height<=limits.height-limits.bottom+1,label+' visible without scrolling');}
-    assert.ok(await dialog(page).locator('.timer').evaluate(e=>parseFloat(getComputedStyle(e).fontSize))>=170);
+    const header=await dialog(page).locator('.sheet-header').boundingBox();for(const selector of ['.session-top','.current-movement','.timer','.effort-reading','.next-reading','.session-structure']){const b=await dialog(page).locator(selector).boundingBox();assert.ok(b.y>=header.y+header.height-1,selector+' not covered by header');assert.ok(b.y+b.height<=limits.height-limits.bottom+1,selector+' visible without scrolling');}
+    for(const label of ['开始跟练','结束跟练']){const b=await dialog(page).getByRole('button',{name:label,exact:true}).boundingBox();assert.ok(b.height>=71.5);assert.ok(await dialog(page).getByRole('button',{name:label,exact:true}).evaluate(e=>parseFloat(getComputedStyle(e).minHeight))>=72);assert.ok(b.y>=0&&b.y+b.height<=limits.height-limits.bottom+1,label+' visible without scrolling');}
+    assert.ok(await dialog(page).locator('.timer').evaluate(e=>parseFloat(getComputedStyle(e).fontSize))>=100);
   }
 };
 const closeFollow=async()=>{

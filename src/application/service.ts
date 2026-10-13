@@ -7,6 +7,7 @@ import {validateWorkout, validDate} from '../domain/validation.ts';
 import {initialStageProgress,sessionStageResults,workSeconds} from '../domain/session.ts';
 import {Repository} from '../repositories/repository.ts';
 import {defaultProfile} from '../domain/profile.ts';
+import {refreshPendingAdjustments,withRowingAdjustments} from '../domain/rowing-adjustments.ts';
 export type MetricInput = {distance:string;spm:string;power:string;calories:string};
 export const blankMetrics = ():MetricInput=>({distance:'',spm:'',power:'',calories:''});
 export function metricsFromInput(input: MetricInput, seconds:number):Workout['metrics'] {
@@ -27,8 +28,9 @@ export class AppService {
   configureFocusedCircuit(id:string,circuit:Circuit,revision:number) {return this.repository.update(s=>{this.writable(s);configurePlanCircuit(s,id,circuit);},revision);}
   activateFocusedPlan(id:string) {return this.repository.update(s=>{this.writable(s);activatePlan(s,id);});}
   adjustFocusedSession(id:string,action:'move'|'skip'|'restore',date?:string) {return this.repository.update(s=>{this.writable(s);adjustPlanSession(s,id,action,date);});}
+  async refreshPendingCourses(){const state=await this.repository.read();if(state.draft||!state.scheduled.some(x=>x.status==='planned'&&withRowingAdjustments(x.course)!==x.course))return state;return this.repository.update(refreshPendingAdjustments);}
   async beginScheduled(id:string,confirmed=false):Promise<Draft> {
-    const result=await this.repository.update(s=>{if(s.draft)throw new Error('请先恢复或结束上次跟练。');const item=s.scheduled.find(x=>x.id===id),plan=s.plans.find(x=>x.id===item?.planId);if(!item||item.status!=='planned'||plan?.status!=='active')throw new Error('计划日程已改变，请重新选择。');const reason=focusedEligibility(item.course,s,confirmed);if(reason)throw new Error(reason);s.draft={...newEntity(),course:structuredClone(item.course),state:'ready',elapsedMs:0,startedAt:new Date().toISOString(),scheduledId:id,owner:this.owner,leaseUntil:Date.now()+15000,revision:0,stageProgress:initialStageProgress(item.course)};});return result.draft!;
+    const result=await this.repository.update(s=>{if(s.draft)throw new Error('请先恢复或结束上次跟练。');refreshPendingAdjustments(s);const item=s.scheduled.find(x=>x.id===id),plan=s.plans.find(x=>x.id===item?.planId);if(!item||item.status!=='planned'||plan?.status!=='active')throw new Error('计划日程已改变，请重新选择。');const reason=focusedEligibility(item.course,s,confirmed);if(reason)throw new Error(reason);s.draft={...newEntity(),course:structuredClone(item.course),state:'ready',elapsedMs:0,startedAt:new Date().toISOString(),scheduledId:id,owner:this.owner,leaseUntil:Date.now()+15000,revision:0,stageProgress:initialStageProgress(item.course)};});return result.draft!;
   }
   saveProfile(profile:Profile) {return this.repository.update(s=>{this.writable(s);s.profile=profile;});}
   saveLesson(id:string,checks:boolean[]) {return this.repository.update(s=>{this.writable(s);const old=s.lessons.find(l=>l.id===id),now=new Date().toISOString();s.lessons=s.lessons.filter(l=>l.id!==id);s.lessons.push({...newEntity(id),createdAt:old?.createdAt||now,version:(old?.version||0)+1,viewedAt:now,contentVersion:CONTENT_VERSION,selfChecks:checks});});}
@@ -36,6 +38,7 @@ export class AppService {
   adjustSchedule(id:string,action:'skip'|'move',date?:string) {return this.repository.update(s=>{this.writable(s);const item=s.scheduled.find(x=>x.id===id);if(!item||item.status!=='planned') throw new Error('这节课已改变，请刷新列表。');if(s.draft?.scheduledId===id) throw new Error('请先结束该节训练。');if(action==='move'){if(!validDate(date)) throw new Error('请选择有效日期。');if(s.scheduled.some(x=>x.planId===item.planId&&x.id!==id&&x.status==='planned'&&x.localDate===date)) throw new Error('这天已有课程，请选择其他日期。');item.localDate=date;}else item.status='skipped';item.updatedAt=new Date().toISOString();item.version++;});}
   advancePlan(id:string,repeat=false) {return this.repository.update(s=>{this.writable(s);if(s.draft) throw new Error('请先保存当前训练。');const p=s.plans.find(p=>p.id===id);if(!p||p.status!=='active'||!s.profile) throw new Error('计划不可用。');if(!repeat&&!canAdvancePlan(p,s)) throw new Error('先完成至少两节无不适、动作稳定的课程；也可以重复当前周。');for(const x of s.scheduled) if(x.planId===id&&x.week===p.week&&x.status==='planned') {x.status='skipped';x.updatedAt=new Date().toISOString();x.version++;}if(!repeat&&p.week===3)p.status='completed';else{if(!repeat)p.week++;s.scheduled.push(...scheduleWeek(p,s.profile,s,localDate(new Date(),p.timeZone)));}p.updatedAt=new Date().toISOString();p.version++;});}
   async begin(course:Course,scheduledId?:string):Promise<Draft> {
+    course=withRowingAdjustments(course);
     const result=await this.repository.update(s=>{if(s.draft) throw new Error('已有未保存训练，请先恢复或结束它。');const eligibility=courseEligibility(course,s);if(!eligibility.allowed) throw new Error(eligibility.reason); if(scheduledId&&!s.scheduled.some(x=>x.id===scheduledId&&x.status==='planned')) throw new Error('这节计划已改变，请重新选择。');s.draft={...newEntity(),course:structuredClone(course),state:'ready',elapsedMs:0,startedAt:new Date().toISOString(),scheduledId,owner:this.owner,leaseUntil:Date.now()+15000,revision:0,stageProgress:initialStageProgress(course)};});
     return result.draft!;
   }
@@ -46,11 +49,11 @@ export class AppService {
     if(!s.draft||s.draft.id!==draft.id||s.draft.owner!==this.owner||s.draft.revision!==draft.revision)throw new Error('草稿已改变，请恢复最新训练后保存。');
     const seconds=Math.floor(draft.elapsedMs/1000);
     const record:Workout={...newEntity(draft.id),sessionId:draft.id,scheduledId:draft.scheduledId,title:draft.course.title,startedAt:draft.startedAt,endedAt:draft.endedAt||new Date().toISOString(),completionStatus:draft.state==='completed'?'completed':'ended-early',captureSource:'guided',activeDurationSeconds:seconds,workDurationSeconds:workSeconds(draft),course:draft.course,feedback,metrics:metricsFromInput(input,seconds),stageResults:sessionStageResults(draft)};
-    validateWorkout(record);s.workouts.push(record);const item=s.scheduled.find(x=>x.id===draft.scheduledId);if(item){item.linkedSessionId=record.id;if(record.completionStatus==='completed')item.status='completed';item.updatedAt=record.updatedAt;item.version++;const plan=s.plans.find(p=>p.id===item.planId);if(plan)syncPlanProgress(plan,s);}s.draft=null;
+    validateWorkout(record);s.workouts.push(record);const item=s.scheduled.find(x=>x.id===draft.scheduledId);if(item){item.linkedSessionId=record.id;if(record.completionStatus==='completed')item.status='completed';item.updatedAt=record.updatedAt;item.version++;const plan=s.plans.find(p=>p.id===item.planId);if(plan)syncPlanProgress(plan,s);}s.draft=null;refreshPendingAdjustments(s);
   });}
   saveManual(record:Workout,expectedVersion?:number) {validateWorkout(record);return this.repository.update(s=>{this.writable(s);const old=s.workouts.find(w=>w.id===record.id);if(expectedVersion!==undefined&&old?.version!==expectedVersion)throw new Error('记录已改变，请重新打开后编辑。');if(!old&&s.workouts.some(w=>w.sessionId===record.sessionId))throw new Error('训练会话已存在。');s.workouts=s.workouts.filter(w=>w.id!==record.id);s.workouts.push(record);});}
   deleteWorkout(id:string) {return this.repository.update(s=>{this.writable(s);s.workouts=s.workouts.filter(w=>w.id!==id);for(const x of s.scheduled) if(x.linkedSessionId===id){delete x.linkedSessionId;if(x.status==='completed')x.status='planned';x.version++;x.updatedAt=new Date().toISOString();}});}
-  discardDraft() {return this.repository.update(s=>{this.writable(s);s.draft=null;});}
+  discardDraft() {return this.repository.update(s=>{this.writable(s);s.draft=null;refreshPendingAdjustments(s);});}
   deleteAllData(expectedRevision:number) {return this.repository.update(s=>{
     this.writable(s);
     const revision=s.revision;
@@ -70,7 +73,7 @@ export class AppService {
     const remap=new Map<string,string>(); for(const w of incoming.workouts){const local=s.workouts.find(x=>x.sessionId===w.sessionId);if(local)remap.set(w.id,local.id);}
     s.workouts=merge(s.workouts,incoming.workouts.filter(w=>!remap.has(w.id)));
     s.scheduled=merge(s.scheduled,incoming.scheduled.map(x=>({...x,linkedSessionId:x.linkedSessionId?remap.get(x.linkedSessionId)||x.linkedSessionId:undefined})));
-    if(incoming.draft)s.draft={...incoming.draft,owner:'',leaseUntil:0,state:incoming.draft.state==='running'?'suspended':incoming.draft.state};
+    if(incoming.draft)s.draft={...incoming.draft,owner:'',leaseUntil:0,state:incoming.draft.state==='running'?'suspended':incoming.draft.state};refreshPendingAdjustments(s);
   },expectedRevision);}
 }
 export function importPreview(backup:Backup,local:Snapshot) {

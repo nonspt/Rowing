@@ -18,21 +18,21 @@ const tick=(draft:Draft,ms:number)=>{while(ms>0){const delta=Math.min(10000,ms);
 const runCounted=(draft:Draft,seconds=17)=>{draft={...draft,state:'running'};while(draft.state==='running'){const stage=currentStage(draft);draft=tick(draft,(stage.stage.repetitions!==undefined?seconds:stage.remaining)*1000);if(stage.stage.repetitions!==undefined)draft=completeRepetitions(draft);}return draft;};
 test('动作可分别计时或计次，次数和动作类型严格校验，旧组合定义不变',()=>{
   const generated=createFocusedPlan(countedInput(),'UTC'),course=generated.sessions[0].course;
-  assert.equal(course.contentVersion,'circuit-2');assert.equal(generated.plan.templateVersion,'circuit-2');assert.ok(course.stages.filter(s=>s.exercise==='squat').every(s=>s.repetitions===12));assert.ok(course.stages.filter(s=>s.exercise==='pushup').every(s=>s.repetitions===undefined&&s.durationSeconds===15));validateCourse(course);
+  assert.equal(course.contentVersion,'circuit-2+adjust-1');assert.equal(generated.plan.templateVersion,'circuit-2');assert.ok(course.stages.filter(s=>s.exercise==='squat').every(s=>s.repetitions===12));assert.ok(course.stages.filter(s=>s.exercise==='pushup').every(s=>s.repetitions===undefined&&s.durationSeconds===15));validateCourse(course);
   const state=emptySnapshot();state.plans=[generated.plan];state.scheduled=generated.sessions;validateSnapshot(state);
   for(const repetitions of [0,31,1.5,Infinity])assert.throws(()=>validateTrainingDefinition({...countedInput().training,circuit:{...defaultCircuit(),targets:{squat:{mode:'reps',repetitions}}}}));
   assert.throws(()=>validateTrainingDefinition({...countedInput().training,circuit:{...defaultCircuit(),targets:{squat:{mode:'reps',repetitions:12,seconds:20}}}}));
   assert.throws(()=>validateTrainingDefinition({...countedInput().training,circuit:{...defaultCircuit(),targets:{burpee:{mode:'reps',repetitions:12}}}}));
   for(const exercise of ['row','rest',undefined])assert.throws(()=>validateCourse({...course,stages:course.stages.map((s,i)=>i===0?{...s,exercise,repetitions:2}:s)}));
-  assert.equal(createFocusedPlan({...countedInput(),training:{...countedInput().training,circuit:defaultCircuit()}},'UTC').sessions[0].course.contentVersion,'circuit-1');
+  assert.equal(createFocusedPlan({...countedInput(),training:{...countedInput().training,circuit:defaultCircuit()}},'UTC').sessions[0].course.contentVersion,'circuit-1+adjust-1');
 });
 test('计次段等待主动确认，超估算不自动前进；暂停、长间隔不补计',()=>{
-  const course=createFocusedPlan(countedInput(),'UTC').sessions[0].course;
+  const course=createFocusedPlan(countedInput(),'UTC').sessions[0].course,setIndex=course.stages.findIndex(s=>s.repetitions!==undefined);
   let draft:Draft={...newEntity(),course,state:'running',elapsedMs:0,startedAt:new Date().toISOString(),owner:'test',leaseUntil:0,revision:0,stageProgress:initialStageProgress(course)};
-  draft=tick(draft,course.stages.slice(0,4).reduce((s,x)=>s+x.durationSeconds,0)*1000);assert.equal(currentStage(draft).stage.exercise,'squat');
-  draft=tick(draft,60000);assert.equal(currentStage(draft).index,4);assert.equal(currentStage(draft).elapsed,60);const progress=sessionProgress(draft),elapsed=draft.elapsedMs;
+  draft=tick(draft,course.stages.slice(0,setIndex).reduce((s,x)=>s+x.durationSeconds,0)*1000);assert.equal(currentStage(draft).stage.exercise,'squat');
+  draft=tick(draft,60000);assert.equal(currentStage(draft).index,setIndex);assert.equal(currentStage(draft).elapsed,60);const progress=sessionProgress(draft),elapsed=draft.elapsedMs;
   assert.equal(sessionProgress(tick(draft,5000)),progress);assert.equal(advance({...draft,state:'paused'},5000).elapsedMs,elapsed);assert.equal(advance(draft,10001).elapsedMs,elapsed);assert.equal(advance(draft,10001).state,'suspended');
-  assert.throws(()=>completeRepetitions({...draft,state:'paused'}));draft=completeRepetitions(draft);assert.equal(currentStage(draft).stage.exercise,'rest');assert.equal(draft.stageProgress!.results[4].completedRepetitions,12);assert.equal(draft.stageProgress!.results[4].actualSeconds,60);assert.ok(sessionProgress(draft)>progress);
+  assert.throws(()=>completeRepetitions({...draft,state:'paused'}));draft=completeRepetitions(draft);assert.equal(currentStage(draft).stage.exercise,'rest');assert.equal(draft.stageProgress!.results[setIndex].completedRepetitions,12);assert.equal(draft.stageProgress!.results[setIndex].actualSeconds,60);assert.ok(sessionProgress(draft)>progress);
 });
 test('计次完成按实际时间保存、次数有明确结果，完成整课与日程幂等',async()=>{
   const repository=new Repository(false),service=new AppService(repository);await service.adoptFocusedPlan(countedInput(),0);const draft=await service.beginScheduled((await repository.read()).scheduled[0].id,true),completed=runCounted(draft),saved=await service.checkpoint({...completed,endedAt:new Date().toISOString()});
@@ -41,10 +41,10 @@ test('计次完成按实际时间保存、次数有明确结果，完成整课�
   assert.equal(state.workouts.length,1);assert.equal(record.activeDurationSeconds,saved.elapsedMs/1000);assert.equal(record.workDurationSeconds,60+3*17+3*15);assert.equal(state.scheduled[0].status,'completed');assert.deepEqual(record.stageResults.filter(s=>s.completedRepetitions!==undefined).map(s=>s.completedRepetitions),[12,12,12]);
 });
 test('计次提前结束不伪造次数，备份往返保留草稿游标并拒绝错标进度',async()=>{
-  const repository=new Repository(false),service=new AppService(repository);await service.adoptFocusedPlan(countedInput(),0);let draft=await service.beginScheduled((await repository.read()).scheduled[0].id,true);draft={...draft,state:'running'};draft=tick(draft,draft.course.stages.slice(0,4).reduce((s,x)=>s+x.durationSeconds,0)*1000+43000);draft={...draft,state:'paused'};await service.checkpoint(draft);
+  const repository=new Repository(false),service=new AppService(repository);await service.adoptFocusedPlan(countedInput(),0);let draft=await service.beginScheduled((await repository.read()).scheduled[0].id,true);const setIndex=draft.course.stages.findIndex(s=>s.repetitions!==undefined);draft={...draft,state:'running'};draft=tick(draft,draft.course.stages.slice(0,setIndex).reduce((s,x)=>s+x.durationSeconds,0)*1000+43000);draft={...draft,state:'paused'};await service.checkpoint(draft);
   const backup=await service.backup(),parsed=parseBackup(JSON.stringify(backup));assert.deepEqual(parsed.data.draft!.stageProgress,backup.data.draft!.stageProgress);const restored=new AppService(new Repository(false));await restored.importBackup(parsed,0);let claimed=await restored.claim();assert.equal(currentStage(claimed).stage.exercise,'squat');assert.equal(currentStage(claimed).elapsed,43);
   for(const change of [d=>delete d.stageProgress,d=>d.stageProgress.index++,d=>d.stageProgress.elapsedMs++,d=>d.stageProgress.results[0].actualSeconds--]){const invalid=structuredClone(backup);change(invalid.data.draft);assert.throws(()=>parseBackup(JSON.stringify(invalid)));}
-  claimed=await restored.checkpoint({...claimed,state:'ended-early',endedAt:new Date().toISOString()});await restored.finish(claimed,{rpe:0,discomfort:false,note:'',technique:'stable',feeling:'good',assessed:false},blankMetrics());const state=await restored.repository.read(),result=state.workouts[0].stageResults[4];assert.equal(result.actualSeconds,43);assert.equal(result.status,'partial');assert.equal(result.completedRepetitions,undefined);assert.equal(state.scheduled[0].status,'planned');
+  claimed=await restored.checkpoint({...claimed,state:'ended-early',endedAt:new Date().toISOString()});await restored.finish(claimed,{rpe:0,discomfort:false,note:'',technique:'stable',feeling:'good',assessed:false},blankMetrics());const state=await restored.repository.read(),result=state.workouts[0].stageResults[setIndex];assert.equal(result.actualSeconds,43);assert.equal(result.status,'partial');assert.equal(result.completedRepetitions,undefined);assert.equal(state.scheduled[0].status,'planned');
 });
 test('模板徒手设置只改待训练快照，保留完成、跳过、日期、ID；草稿与旧 revision 拒绝',async()=>{
   const state=emptySnapshot();state.profile=profile();adoptPlan(state,{title:'模板无氧',startDate:'2026-10-13',training:{mode:'anaerobic',weeks:4,weeklyDays:2,presetId:'AN01',circuit:defaultCircuit()}});state.scheduled[0].status='completed';state.scheduled[1].status='skipped';const before=structuredClone(state.scheduled),id=state.plans[0].id;configurePlanCircuit(state,id,countedInput().training.circuit!);validateSnapshot(state);assert.deepEqual(state.scheduled.slice(0,2),before.slice(0,2));for(const item of state.scheduled){assert.equal(item.id,before.find(s=>s.id===item.id)!.id);assert.equal(item.localDate,before.find(s=>s.id===item.id)!.localDate);}assert.ok(state.scheduled.filter(s=>s.status==='planned'&&s.course.category==='interval').every(s=>s.course.stages.some(x=>x.repetitions===12)));
@@ -79,7 +79,7 @@ test('计划完成自动推进到第 5 周、12 周末；已跳过不计完成',
 test('编辑自定义保留已完成快照和 ID，只改未来；已有进度禁止改频次和类型',()=>{
   const state=emptySnapshot();state.profile=profile();adoptPlan(state,input());const p=state.plans[0],first=state.scheduled[0];first.status='completed';const original=structuredClone(first),pendingId=state.scheduled[1].id;state.scheduled[1].localDate='2026-10-15';
   const next=input();next.training.weeks=8;next.training.custom!.workSeconds=1200;editCustomPlan(state,p.id,next);
-  assert.deepEqual(state.scheduled.find(s=>s.id===original.id),original);assert.equal(state.scheduled.find(s=>s.id===pendingId)!.course.plannedDurationSeconds,1800);assert.equal(state.scheduled.length,24);assert.equal(state.scheduled.find(s=>s.id===pendingId)!.localDate,'2026-10-15');validateSnapshot(state);
+  assert.deepEqual(state.scheduled.find(s=>s.id===original.id),original);assert.equal(state.scheduled.find(s=>s.id===pendingId)!.course.plannedDurationSeconds,1810);assert.equal(state.scheduled.length,24);assert.equal(state.scheduled.find(s=>s.id===pendingId)!.localDate,'2026-10-15');validateSnapshot(state);
   assert.throws(()=>editCustomPlan(state,p.id,{...next,training:{...next.training,weeklyDays:2}}));
 });
 test('日程冲突及无氧恢复间隔不可绕过；跳过后可恢复',()=>{
@@ -113,7 +113,7 @@ test('组合模板：每轮独立恢复、换位、深蹲与俯卧撑；所有�
     const result=createFocusedPlan({title:preset.title,startDate:'2026-10-12',training:{mode:preset.mode,weeks,weeklyDays:preset.weeklyDays,presetId:preset.id,circuit:defaultCircuit()}},'UTC');
     const state=emptySnapshot();state.plans=[result.plan];state.scheduled=result.sessions;validateSnapshot(state);
     for(const {course} of result.sessions.filter(s=>s.course.category==='interval')){
-      assert.equal(course.contentVersion,'circuit-1');const main=course.stages.slice(1,-1);assert.equal(main.length,(preset.id==='AN01'?3:4)*8);
+      assert.equal(course.contentVersion,'circuit-1+adjust-1');const main=course.stages.slice(1,-1).filter(s=>!s.adjustment);assert.equal(main.length,(preset.id==='AN01'?3:4)*8);
       for(let i=0;i<main.length;i+=8){assert.deepEqual(main.slice(i,i+8).map(s=>s.exercise),['row','row','off-rower','squat','rest','pushup','rest','on-rower']);assert.ok(main[i+1].durationSeconds>=main[i].durationSeconds*3);assert.equal(main[i+2].durationSeconds,20);assert.equal(main[i+7].durationSeconds,20);assert.ok(main[i+4].durationSeconds>=main[i+3].durationSeconds*2);}
       assert.equal(course.stages.at(-2)!.kind,'recovery');assert.deepEqual(courseOutline(course).map(s=>s.label),['热身划船','快划','自重深蹲','俯卧撑','放松划船']);
     }
@@ -130,7 +130,7 @@ test('旧无氧计划显式升级：保留完成、跳过、日期、ID 与原�
   const plan=state.plans[0];state.scheduled[0].status='completed';state.scheduled[1].status='skipped';state.scheduled[2].localDate='2026-10-18';const original=structuredClone(state.scheduled);
   enablePlanCircuit(state,plan.id);assert.deepEqual(state.scheduled.slice(0,2),original.slice(0,2));
   for(let i=2;i<state.scheduled.length;i++){assert.equal(state.scheduled[i].id,original[i].id);assert.equal(state.scheduled[i].localDate,original[i].localDate);}
-  assert.equal(original[2].course.contentVersion,'1.0.0');assert.equal(state.scheduled[2].course.contentVersion,'circuit-1');validateSnapshot(state);
+  assert.equal(original[2].course.contentVersion,'1.0.0+adjust-1');assert.equal(state.scheduled[2].course.contentVersion,'circuit-1+adjust-1');validateSnapshot(state);
   const blocked=emptySnapshot();blocked.draft={} as Draft;assert.throws(()=>enablePlanCircuit(blocked,plan.id));assert.throws(()=>enablePlanCircuit(state,plan.id));
 });
 test('组合阶段边界与工作统计：换位和休息不计工作，徒手工作按实计入',()=>{

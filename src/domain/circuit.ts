@@ -45,22 +45,23 @@ export function withCircuit(source:Course,circuit:Circuit,roundLimit?:number):Co
       if(target.mode==='reps')stages.at(-1)!.repetitions=target.repetitions;
       append(exercise+'-rest','recovery','rest',circuit.restSeconds,[1,2],'停止动作，放松并自然呼吸；恢复不足时暂停。');
     }
-    append('on','recovery','on-rower',20,[1,2],'坐稳并扣好脚带，准备划行；未准备好请暂停。');
+    append('on','recovery','on-rower',20,[1,2],'坐稳并扣好脚带，按下一段提示调整设备；未准备好请暂停。');
   }
   stages.push({...source.stages.at(-1)!,exercise:'row'});
   return {...course,title:source.title+' · 徒手组合',contentVersion:circuitVersion(circuit),status:'draft',description:'划船间歇与徒手动作交替，包含独立恢复、离机和上机时间。',focus:'动作受控，保留恢复，不追求力竭。',stages,plannedDurationSeconds:stages.reduce((sum,s)=>sum+s.durationSeconds,0)};
 }
 export function stageLabel(stage:Stage):string{
+  if(stage.adjustment)return '调整设备';
   if(stage.exercise==='squat'||stage.exercise==='pushup')return exerciseNames[stage.exercise];
-  if(stage.exercise==='rest')return '徒手休息';
+  if(stage.exercise==='rest')return '站立休息';
   if(stage.exercise==='off-rower')return '离机准备';
   if(stage.exercise==='on-rower')return '返回划船机';
   if(stage.exercise==='row')return {warmup:'热身划船',work:'快划',recovery:'轻松划船',cooldown:'放松划船'}[stage.kind];
   return stageNames[stage.kind];
 }
 export const circuitRounds=(course:Course)=>course.stages.filter(s=>s.kind==='work'&&s.exercise==='row').length;
-export function courseOutline(course:Course){
-  const selected=course.stages.filter(s=>s.kind==='warmup'||s.kind==='work'||s.kind==='cooldown'),groups=new Map<string,{label:string;seconds:number;repetitions?:number;count:number}>();
+export function courseOutline(course:Course,includeAdjustments=false){
+  const selected=course.stages.filter(s=>s.kind==='warmup'||s.kind==='work'||s.kind==='cooldown'||(includeAdjustments&&s.adjustment)),groups=new Map<string,{label:string;seconds:number;repetitions?:number;count:number}>();
   for(const stage of selected){const label=stageLabel(stage),key=label+'-'+stageTargetLabel(stage);const item=groups.get(key);if(item)item.count++;else groups.set(key,{label,seconds:stage.durationSeconds,repetitions:stage.repetitions,count:1});}
   return [...groups.values()];
 }

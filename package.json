@@ -1,12 +1,12 @@
 {
   "name": "home-rower",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5188",
     "check": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/domain.test.ts tests/plans.test.ts",
+    "test": "node --experimental-strip-types --test tests/domain.test.ts tests/plans.test.ts tests/adjustments.test.ts",
     "test:browser": "node tests/browser.mjs",
     "build": "tsc --noEmit && node scripts/notices.mjs && vite build && node scripts/finalize-pwa.mjs",
     "preview": "node scripts/preview.mjs",
@@ -18,7 +18,9 @@
     "test:pages": "node tests/pages.mjs",
     "audit:svg": "node scripts/audit-svg.mjs",
     "test:ui-review": "node tests/ui-review.mjs",
-    "test:counted": "node tests/counted.mjs"
+    "test:counted": "node tests/counted.mjs",
+    "test:follow-layout": "node tests/follow-layout.mjs",
+    "test:editor-options": "node tests/editor-options.mjs"
   },
   "dependencies": {
     "react": "19.2.6",

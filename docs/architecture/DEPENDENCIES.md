@@ -26,3 +26,5 @@ IndexedDB、SW、CSS、SVG、Audio、Wake Lock 均使用原生能力；无数据
 pnpm audit:licenses 读取锁文件对应的本地包，包含 MIT、Apache-2.0、ISC、BSD-3-Clause 和构建使用的 Lightning CSS MPL-2.0。运行时原始许可随 [third-party-notices.txt](../../public/third-party-notices.txt)交付。
 
 构建实测 JS + CSS gzip 约 90.6KB；11 项离线资源约 339.9KB（0.1.1），低于 250KB / 5MB 预算。没有远端字体、照片、视频。移动性能仍需真机测量。
+
+1.1.0 构建 aea32d498f64：gzip JS / CSS 95.9KiB，11 项离线资源 359.3KiB；原生 range / ResizeObserver / main 与 SVG 复用，无新依赖。

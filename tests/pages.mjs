@@ -29,7 +29,7 @@ try{
   page.on('response',response=>{if(response.status()>=400)errors.push(`${response.status()} ${response.url()}`);});
   await page.goto(url,{waitUntil:'networkidle'});
   await page.getByRole('heading',{name:'训练计划',exact:true}).waitFor();
-  await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
+  await page.waitForFunction(()=>!document.querySelector('dialog[open],[data-session-page]'));
   const manifestURL=new URL(await page.locator('link[rel=manifest]').getAttribute('href'),url);
   const manifest=await (await fetch(manifestURL)).json();
   assert.equal(new URL(manifest.scope,manifestURL).pathname,base);
@@ -51,7 +51,9 @@ try{
   assert.equal(await page.getByRole('navigation').count(),0);
   await context.setOffline(false);assert.deepEqual(errors,[]);
   await browser.close();browser=undefined;
-  for(const script of ['tests/iphone-air.mjs','tests/ipad-mini.mjs','tests/circuit.mjs','tests/ui-review.mjs','tests/counted.mjs']){
+  const suites=['tests/iphone-air.mjs','tests/ipad-mini.mjs','tests/circuit.mjs','tests/ui-review.mjs','tests/counted.mjs','tests/follow-layout.mjs','tests/editor-options.mjs'],requested=process.argv.slice(2);
+  if(requested.some(name=>!suites.some(script=>path.basename(script,'.mjs')===name)))throw new Error('Unknown Pages acceptance suite');
+  for(const script of suites.filter(script=>!requested.length||requested.includes(path.basename(script,'.mjs')))){
     const code=await new Promise((resolve,reject)=>{
       const child=spawn(process.execPath,[script],{env:{...process.env,APP_URL:url},stdio:'inherit'});
       child.once('error',reject);child.once('close',resolve);

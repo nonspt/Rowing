@@ -6,6 +6,7 @@ import {addDays,localDate,scheduleWeek,weekStart} from './plans.ts';
 import {validDate} from './validation.ts';
 import {validateTrainingDefinition} from './plan-definition.ts';
 import {circuitVersion,withCircuit} from './circuit.ts';
+import {withRowingAdjustments} from './rowing-adjustments.ts';
 export type PlanInput={title:string;startDate:string;training:PlanTraining};
 export const planWeeks=(p:Plan)=>p.training?.weeks??4;
 export const planMode=(p:Plan)=>p.training?.mode??(p.templateId==='P03'?'anaerobic':'aerobic');
@@ -13,10 +14,10 @@ export function makeCourse(training:PlanTraining,week:number,slot:number):Course
   validateTrainingDefinition(training);
   if(!training.custom&&training.mode==='anaerobic'){
     const recovery=slot===1;
-    if(recovery)return courseById('A01');
+    if(recovery)return withRowingAdjustments(courseById('A01'));
     const c=courseById(training.presetId==='AN03'&&week>0&&slot===2?'H02':'H01');
     if((week+1)%4===0){c.stages=[c.stages[0],...c.stages.slice(1,9),c.stages.at(-1)!];c.contentVersion='focused-1';c.status='draft';}
-    c.plannedDurationSeconds=c.stages.reduce((s,x)=>s+x.durationSeconds,0);return training.circuit?withCircuit(c,training.circuit,training.presetId==='AN01'?3:4):c;
+    c.plannedDurationSeconds=c.stages.reduce((s,x)=>s+x.durationSeconds,0);return withRowingAdjustments(training.circuit?withCircuit(c,training.circuit,training.presetId==='AN01'?3:4):c);
   }
   const custom=training.custom;
   const intro=training.presetId==='AE01',long=training.presetId==='AE03';
@@ -32,7 +33,7 @@ export function makeCourse(training:PlanTraining,week:number,slot:number):Course
   }
   stages.push({id:id+'-cooldown',kind:'cooldown',durationSeconds:config.cooldownMinutes*60,rpe:[2,3],cue:'逐渐减小用力，轻松结束。'});
   const course:Course={id,title:interval?'自定义短间歇':custom?'自定义有氧':presets.find(x=>x.id===training.presetId)!.title,category:interval?'interval':'aerobic',description:'包含完整热身、主训练与放松。',suitability:interval?'已有规律划船基础':'按当日感受调整用力',level:interval?'regular':intro?'new':'basic',contentVersion:custom?'custom-1':'focused-1',status:'draft',stages,plannedDurationSeconds:stages.reduce((s,x)=>s+x.durationSeconds,0),focus:interval?'短工作段，充分恢复':'舒适稳定的持续划行',alternativeId:'A01'};
-  return training.circuit?withCircuit(course,training.circuit):course;
+  return withRowingAdjustments(training.circuit?withCircuit(course,training.circuit):course);
 }
 export function focusedSchedule(plan:Plan):Scheduled[]{
   if(!plan.training)throw new Error('旧版计划没有完整周期定义。');

@@ -3,7 +3,7 @@ export type Goal = 'technique' | 'aerobic' | 'habit' | 'interval';
 export type Experience = 'new' | 'basic' | 'regular';
 export type Profile = Entity & {experience: Experience; goal: Goal; weeklyDays: number; availableMinutes: number; machine: string; timeZone: string; sound: boolean};
 export type Exercise = 'row' | 'pushup' | 'squat' | 'rest' | 'off-rower' | 'on-rower';
-export type Stage = {id: string; kind: 'warmup' | 'work' | 'recovery' | 'cooldown'; durationSeconds: number; rpe: [number, number]; cue: string; exercise?:Exercise; repetitions?:number};
+export type Stage = {id: string; kind: 'warmup' | 'work' | 'recovery' | 'cooldown'; durationSeconds: number; rpe: [number, number]; cue: string; exercise?:Exercise; repetitions?:number; adjustment?:true};
 export type Course = {id: string; title: string; category: Goal | 'recovery'; description: string; suitability: string; level: 'new' | 'basic' | 'regular'; contentVersion: string; status: 'draft' | 'confirmed'; stages: Stage[]; plannedDurationSeconds: number; focus: string; alternativeId: string};
 export type StageResult = {stageId:string; actualSeconds:number; status:'completed'|'partial'|'skipped'; completedRepetitions?:number};
 export type StageProgress = {index:number; elapsedMs:number; results:StageResult[]};
@@ -22,7 +22,7 @@ export type Plan = Entity & {templateId: string; title: string; startDate: strin
 export type Scheduled = Entity & {planId: string; localDate: string; week: number; slot?:number; course: Course; status: 'planned' | 'skipped' | 'completed'; linkedSessionId?: string};
 export type Snapshot = {schemaVersion: 2; revision: number; profile: Profile | null; lessons: LessonProgress[]; plans: Plan[]; scheduled: Scheduled[]; draft: Draft | null; workouts: Workout[]; lastBackupAt?: string};
 export type Backup = {format: 'home-rower-backup'; exportVersion: 1; schemaVersion: 1 | 2; appVersion: string; contentVersion: string; exportedAt: string; counts: {workouts: number; scheduled: number; lessons: number; plans: number}; data: Snapshot};
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = '1.1.0';
 export const CONTENT_VERSION = '1.0.0';
 export const newEntity = (id: string = crypto.randomUUID()): Entity => {const now = new Date().toISOString(); return {id, createdAt: now, updatedAt: now, version: 1};};
 export const emptySnapshot = (): Snapshot => ({schemaVersion: 2, revision: 0, profile: null, lessons: [], plans: [], scheduled: [], draft: null, workouts: []});
