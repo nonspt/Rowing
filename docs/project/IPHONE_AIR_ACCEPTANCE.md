@@ -1,6 +1,6 @@
 # iPhone Air 参数模拟验收
 
-更新：2026-10-13；应用 0.3.0。
+更新：2026-10-13；应用 1.0.0。
 
 [Apple 技术规格](https://www.apple.com/iphone-air/specs/)分辨率 1260×2736；[Apple 布局规格](https://developer.apple.com/design/human-interface-guidelines/layout)列出 420×912 pt、@3x。模拟采用 420×912 CSS px、DPR 3、移动视口和触控；PNG 直接核验 1260×2736。
 
@@ -22,3 +22,5 @@
 运行 pnpm test:iphone-air；pnpm test:pages 会在 /Rowing/ 子路径完整执行。线上地址通过 APP_URL 指定，发布后需单独验证。
 
 Safari 软键盘、visualViewport、系统字体、VoiceOver、安装主屏、音频与锁屏仍需真实设备验证。
+
+0.3.1 追加 UI / 数据验收：双主题金色、实际可见文字与输入边界、等高卡片 / 跟练、今天与训练状态、更换按钮尺寸、删除的确认 / 取消 / 异常回滚 / 备份恢复 / 离线及 200% 字体。详见 VALIDATION_REPORT 与 tests/ui-review.mjs。

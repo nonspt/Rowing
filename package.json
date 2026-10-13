@@ -1,6 +1,6 @@
 {
   "name": "home-rower",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,7 +16,9 @@
     "test:ipad-mini": "node tests/ipad-mini.mjs",
     "test:circuit": "node tests/circuit.mjs",
     "test:pages": "node tests/pages.mjs",
-    "audit:svg": "node scripts/audit-svg.mjs"
+    "audit:svg": "node scripts/audit-svg.mjs",
+    "test:ui-review": "node tests/ui-review.mjs",
+    "test:counted": "node tests/counted.mjs"
   },
   "dependencies": {
     "react": "19.2.6",

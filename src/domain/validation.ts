@@ -14,6 +14,7 @@ export function validateCourse(input: unknown): asserts input is Course {
   let sum=0; const ids=new Set();
   for (const value of c.stages as unknown[]) {const s=object(value); if (!id(s.id)||ids.has(s.id)||!['warmup','work','recovery','cooldown'].includes(String(s.kind))||!num(s.durationSeconds,1,21600)||!Number.isInteger(s.durationSeconds)||!str(s.cue,300)||!Array.isArray(s.rpe)||s.rpe.length!==2||!num(s.rpe[0],0,10)||!num(s.rpe[1],s.rpe[0],10)) fail('课程阶段字段无效。'); ids.add(s.id); sum+=s.durationSeconds as number;}
   for(const value of c.stages as unknown[]){const s=object(value);if(s.exercise!==undefined&&(!['row','pushup','squat','rest','off-rower','on-rower'].includes(String(s.exercise))||(s.exercise!=='row'&&c.category!=='interval')||((s.exercise==='pushup'||s.exercise==='squat')&&s.kind!=='work')||(['rest','off-rower','on-rower'].includes(String(s.exercise))&&s.kind!=='recovery')))fail('课程动作类型无效。');}
+  for(const value of c.stages as unknown[]){const s=object(value);if(s.repetitions!==undefined&&(!['squat','pushup'].includes(String(s.exercise))||s.kind!=='work'||!num(s.repetitions,1,30)||!Number.isInteger(s.repetitions)))fail('仅徒手工作段可设置 1–30 次。');}
   if (sum!==c.plannedDurationSeconds||sum>21600) fail('课程总时长与阶段不一致。');
 }
 export function validateWorkout(input: unknown): asserts input is Workout {
@@ -25,7 +26,12 @@ export function validateWorkout(input: unknown): asserts input is Workout {
   if (w.captureSource==='guided' && !w.course) fail('跟练记录缺少课程快照。');
   if (w.scheduledId!==undefined && !id(w.scheduledId)) fail('计划关联 ID 无效。');
   if (!Array.isArray(w.stageResults)||w.stageResults.length>100) fail('阶段记录无效。');
-  for (const value of w.stageResults as unknown[]) {const s=object(value); if (!id(s.stageId)||!num(s.actualSeconds,0,21600)||!['completed','partial','skipped'].includes(String(s.status))) fail('阶段结果无效。');}
+  for (const value of w.stageResults as unknown[]) {const s=object(value); if (!id(s.stageId)||!num(s.actualSeconds,0,21600)||!['completed','partial','skipped'].includes(String(s.status))) fail('阶段结果无效。');if(s.completedRepetitions!==undefined){const stage=(w.course as Course|undefined)?.stages.find(x=>x.id===s.stageId);if(!stage?.repetitions||s.status!=='completed'||s.completedRepetitions!==stage.repetitions)fail('动作完成次数与课程不一致。');}}
+  const course=w.course as Course|undefined;
+  if(course?.stages.some(stage=>stage.repetitions!==undefined)){
+    const results=w.stageResults as Workout['stageResults'];
+    if(results.length!==course.stages.length||results.some((result,index)=>result.stageId!==course.stages[index].id||(course.stages[index].repetitions!==undefined&&result.status==='completed'&&result.completedRepetitions!==course.stages[index].repetitions))||(w.completionStatus==='completed'&&results.some(result=>result.status!=='completed'))||Math.floor(results.reduce((sum,result)=>sum+result.actualSeconds,0))!==w.activeDurationSeconds)fail('计次训练结果或实际时长与课程不一致。');
+  }
   const metrics=object(w.metrics);
   const specs: Record<string,{unit:string; max:number}> = {distance:{unit:'m',max:100000},pace:{unit:'s/500m',max:10800000},spm:{unit:'spm',max:100},power:{unit:'W',max:3000},calories:{unit:'kcal',max:20000}};
   for (const [key,value] of Object.entries(metrics)) {if (!specs[key]) fail('记录包含未知指标。'); if (value===null) continue; const m=object(value), spec=specs[key]; if (!num(m.value,Number.MIN_VALUE,spec.max)||m.unit!==spec.unit||!['manual','derived'].includes(String(m.source))||m.scope!=='whole-session') fail('请填写有效的设备读数；没有读数可留空。');}
@@ -41,7 +47,17 @@ export function validateSnapshot(input: unknown): asserts input is Snapshot {
   if ((s.plans as {status:string}[]).filter(p=>p.status==='active').length>1) fail('只能有一个活动计划。');
   for (const value of s.scheduled as unknown[]) {const item=object(value); if(item.slot!==undefined&&(!num(item.slot,0,3)||!Number.isInteger(item.slot)))fail('日程序号无效。'); validateCourse(item.course); if (!id(item.planId)||!(s.plans as {id:string}[]).some(p=>p.id===item.planId)||!validDate(item.localDate)||!num(item.week,0,((s.plans as {id:string;training?:{weeks:number}}[]).find(p=>p.id===item.planId)?.training?.weeks??4)-1)||!Number.isInteger(item.week)||!['planned','completed','skipped'].includes(String(item.status))) fail('计划日程或关联无效。'); if (item.linkedSessionId!==undefined && !(s.workouts as {id:string}[]).some(w=>w.id===item.linkedSessionId)) fail('日程关联的训练记录不存在。');}
   for (const value of s.lessons as unknown[]) {const l=object(value); if (!['setup','catch','drive','finish','recovery'].includes(String(l.id))||!iso(l.viewedAt)||!str(l.contentVersion,80)||!Array.isArray(l.selfChecks)||l.selfChecks.length!==4||!l.selfChecks.every(x=>typeof x==='boolean')) fail('学习进度无效。');}
-  if (s.draft!==null) {const d=entity(s.draft); validateCourse(d.course); if (!['ready','running','paused','suspended','completed','ended-early'].includes(String(d.state))||!num(d.elapsedMs,0,(d.course as Course).plannedDurationSeconds*1000)||!iso(d.startedAt)||!str(d.owner,100)||!num(d.leaseUntil,0,1e15)||!num(d.revision,0,1e12)) fail('训练草稿无效。'); if(d.endedAt!==undefined&&!iso(d.endedAt)) fail('草稿结束时间无效。'); if(d.scheduledId!==undefined && !(s.scheduled as {id:string}[]).some(x=>x.id===d.scheduledId)) fail('草稿的日程关联不存在。');}
+  if (s.draft!==null) {const d=entity(s.draft); validateCourse(d.course); const course=d.course as Course,hasCounts=course.stages.some(x=>x.repetitions!==undefined);if (!['ready','running','paused','suspended','completed','ended-early'].includes(String(d.state))||!num(d.elapsedMs,0,hasCounts?21600*1000:course.plannedDurationSeconds*1000)||!iso(d.startedAt)||!str(d.owner,100)||!num(d.leaseUntil,0,1e15)||!num(d.revision,0,1e12)) fail('训练草稿无效。'); if(d.endedAt!==undefined&&!iso(d.endedAt)) fail('草稿结束时间无效。'); if(d.scheduledId!==undefined && !(s.scheduled as {id:string}[]).some(x=>x.id===d.scheduledId)) fail('草稿的日程关联不存在。');
+    if(hasCounts!==Boolean(d.stageProgress))fail('按次数草稿缺少阶段进度，或计时草稿包含无效进度。');
+    if(d.stageProgress!==undefined){
+      const progress=object(d.stageProgress);
+      if(!num(progress.index,0,course.stages.length)||!Number.isInteger(progress.index)||!num(progress.elapsedMs,0,21600*1000)||!Array.isArray(progress.results)||progress.results.length!==progress.index)fail('阶段进度无效。');
+      const index=progress.index as number,current=course.stages[index];let total=progress.elapsedMs as number;
+      if((d.state==='completed')!==(index===course.stages.length)||(!current&&progress.elapsedMs!==0)||(current?.repetitions===undefined&&current&&(progress.elapsedMs as number)>=current.durationSeconds*1000))fail('阶段进度与训练状态不一致。');
+      for(let i=0;i<(progress.results as unknown[]).length;i++){const result=object((progress.results as unknown[])[i]),stage=course.stages[i];if(result.stageId!==stage.id||result.status!=='completed'||!num(result.actualSeconds,0,21600)||(stage.repetitions!==undefined?result.completedRepetitions!==stage.repetitions:result.completedRepetitions!==undefined||Math.abs((result.actualSeconds as number)-stage.durationSeconds)>.001))fail('阶段完成记录无效。');total+=(result.actualSeconds as number)*1000;}
+      if(Math.abs(total-(d.elapsedMs as number))>.01)fail('实际跟练时长与阶段不一致。');
+    }
+  }
   if (s.lastBackupAt!==undefined && !iso(s.lastBackupAt)) fail('备份时间无效。');
 }
 export function validDate(value: unknown): value is string {return str(value,10)&&/^\d{4}-\d\d-\d\d$/.test(value)&&Number.isFinite(Date.parse(`${value}T00:00:00Z`))&&new Date(`${value}T00:00:00Z`).toISOString().slice(0,10)===value;}

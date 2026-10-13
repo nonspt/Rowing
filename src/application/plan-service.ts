@@ -1,7 +1,16 @@
-import type {Plan,Snapshot} from '../domain/types.ts';
+import type {Circuit,Plan,Snapshot} from '../domain/types.ts';
 import {addDays} from '../domain/plans.ts';
 import {createFocusedPlan,focusedSchedule,makeCourse,syncPlanProgress,type PlanInput} from '../domain/focused-plans.ts';
-import {defaultCircuit} from '../domain/circuit.ts';
+import {circuitVersion,defaultCircuit,validateCircuit} from '../domain/circuit.ts';
+export function configurePlanCircuit(state:Snapshot,id:string,circuit:Circuit):void{
+  if(state.draft)throw new Error('请先结束当前跟练，再修改徒手动作。');
+  validateCircuit(circuit);
+  const plan=state.plans.find(p=>p.id===id&&p.status==='active');
+  if(!plan?.training||plan.training.mode!=='anaerobic')throw new Error('请选择无氧计划。');
+  const training={...plan.training,circuit:structuredClone(circuit)},now=new Date().toISOString();
+  for(const item of state.scheduled.filter(s=>s.planId===id&&s.status==='planned')){item.course=makeCourse(training,item.week,item.slot??0);item.updatedAt=now;item.version++;}
+  plan.training=training;plan.templateVersion=circuitVersion(circuit);plan.updatedAt=now;plan.version++;
+}
 export function enablePlanCircuit(state:Snapshot,id:string):void{
   if(state.draft)throw new Error('请先结束当前跟练，再加入徒手组合。');
   const plan=state.plans.find(p=>p.id===id&&p.status==='active');

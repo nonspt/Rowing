@@ -1,4 +1,4 @@
-import {advance,currentStage} from '../domain/session.ts';
+import {advance,completeRepetitions,currentStage,MAX_SESSION_MS} from '../domain/session.ts';
 import type {Draft} from '../domain/types.ts';
 import {AppService} from './service.ts';
 export class SessionController {
@@ -14,6 +14,7 @@ export class SessionController {
     if(this.draft.state!=='running')return;
     const now=performance.now(),index=currentStage(this.draft).index;
     this.draft=advance(this.draft,now-this.last);this.last=now;
+    if(this.draft.state==='suspended'&&this.draft.elapsedMs>=MAX_SESSION_MS){this.stopTimer();this.error='跟练已达到 6 小时上限，请结束并保存本次训练。';}
     if(currentStage(this.draft).index!==index)this.stageChanged();
     if(this.draft.state==='completed'){this.draft.endedAt=new Date().toISOString();this.stopTimer();}
     this.emit();
@@ -29,7 +30,8 @@ export class SessionController {
     });
     return this.queue;
   }
-  async start(){await this.queue;if(this.error)await this.persist();if(this.error)throw new Error(this.error);this.draft.state='running';this.last=performance.now();this.lastSave=this.last;this.timer=setInterval(this.tick,200);await this.persist();this.emit();}
+  async start(){await this.queue;if(this.draft.state==='completed'||this.draft.state==='ended-early')return;if(this.draft.stageProgress&&this.draft.elapsedMs>=MAX_SESSION_MS)throw new Error('跟练已达到 6 小时上限，请结束并保存。');if(this.error)await this.persist();if(this.error)throw new Error(this.error);this.stopTimer();this.draft.state='running';this.last=performance.now();this.lastSave=this.last;this.timer=setInterval(this.tick,200);await this.persist();this.emit();}
+  async completeSet(){await this.queue;if(this.error)throw new Error(this.error);this.tick();this.draft=completeRepetitions(this.draft);this.stageChanged();if(this.draft.state==='completed'){this.draft.endedAt=new Date().toISOString();this.stopTimer();}await this.persist();this.emit();}
   async pause(suspended=false){if(this.draft.state==='running')this.tick();this.stopTimer();if(this.draft.state!=='completed'&&this.draft.state!=='ended-early')this.draft.state=suspended?'suspended':'paused';await this.persist();this.emit();}
   async end(){await this.pause();if(this.draft.state!=='completed'){this.draft.state='ended-early';this.draft.endedAt=new Date().toISOString();}await this.persist();this.emit();}
   async flush(){if(this.draft.state==='running')await this.pause();else await this.persist();if(this.error)throw new Error(this.error);}

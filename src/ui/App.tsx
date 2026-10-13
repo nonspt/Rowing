@@ -8,7 +8,8 @@ import {applyPwaUpdate,registerPwa} from '../adapters/pwa.ts';
 import {Icon} from './components/Icon.tsx';
 import {Notice} from './components/shared.tsx';
 import {Plans} from './pages/Plans.tsx';
-import {Settings,defaultProfile} from './pages/Settings.tsx';
+import {Settings} from './pages/Settings.tsx';
+import {defaultProfile} from '../domain/profile.ts';
 import {Session} from './pages/Session.tsx';
 import {Toast} from './components/Toast.tsx';
 export function App(){

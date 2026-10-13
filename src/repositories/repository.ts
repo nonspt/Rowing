@@ -22,7 +22,7 @@ export class Repository {
     });
     await this.read(); // Invalid persisted data must never be replaced by defaults.
   }
-  private transaction(mutator?: (state:Snapshot)=>void, expectedRevision?:number):Promise<Snapshot> {
+  private async transaction(mutator?: (state:Snapshot)=>void, expectedRevision?:number):Promise<Snapshot> {
     if(!this.persistent) {const next=structuredClone(this.temporary); if(expectedRevision!==undefined&&next.revision!==expectedRevision) return Promise.reject(new Error('数据已改变，请重新预览后再操作。')); if(mutator){mutator(next); next.revision++;validateSnapshot(next);this.temporary=next;} return Promise.resolve(structuredClone(next));}
     if(!this.database) return Promise.reject(new Error('数据库连接已关闭，请刷新重试。原数据仍保留。'));
     return new Promise((resolve,reject)=>{

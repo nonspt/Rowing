@@ -5,7 +5,7 @@ import type {Course,Plan,PlanTraining,Scheduled,Snapshot,Stage} from './types.ts
 import {addDays,localDate,scheduleWeek,weekStart} from './plans.ts';
 import {validDate} from './validation.ts';
 import {validateTrainingDefinition} from './plan-definition.ts';
-import {withCircuit} from './circuit.ts';
+import {circuitVersion,withCircuit} from './circuit.ts';
 export type PlanInput={title:string;startDate:string;training:PlanTraining};
 export const planWeeks=(p:Plan)=>p.training?.weeks??4;
 export const planMode=(p:Plan)=>p.training?.mode??(p.templateId==='P03'?'anaerobic':'aerobic');
@@ -43,7 +43,7 @@ export function focusedSchedule(plan:Plan):Scheduled[]{
 export function createFocusedPlan(input:PlanInput,timeZone:string):{plan:Plan;sessions:Scheduled[]}{
   validateTrainingDefinition(input.training);
   if(!input.title.trim()||input.title.length>60||!validDate(input.startDate))throw new Error('请输入 1–60 字的名称和有效开始日期。');
-  const plan:Plan={...newEntity(),templateId:'FOCUSED',title:input.title.trim(),startDate:input.startDate,week:0,status:'active',ruleVersion:'focused-rules-1',templateVersion:input.training.circuit?'circuit-1':input.training.custom?'custom-1':'focused-1',reason:'按完整周期安排，保留热身、恢复与放松。',timeZone,training:structuredClone(input.training)};
+  const plan:Plan={...newEntity(),templateId:'FOCUSED',title:input.title.trim(),startDate:input.startDate,week:0,status:'active',ruleVersion:'focused-rules-1',templateVersion:input.training.circuit?circuitVersion(input.training.circuit):input.training.custom?'custom-1':'focused-1',reason:'按完整周期安排，保留热身、恢复与放松。',timeZone,training:structuredClone(input.training)};
   return {plan,sessions:focusedSchedule(plan)};
 }
 export function syncPlanProgress(plan:Plan,state:Snapshot):void{
