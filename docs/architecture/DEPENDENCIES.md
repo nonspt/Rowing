@@ -28,3 +28,9 @@ pnpm audit:licenses 读取锁文件对应的本地包，包含 MIT、Apache-2.0�
 构建实测 JS + CSS gzip 约 90.6KB；11 项离线资源约 339.9KB（0.1.1），低于 250KB / 5MB 预算。没有远端字体、照片、视频。移动性能仍需真机测量。
 
 1.1.0 构建 aea32d498f64：gzip JS / CSS 95.9KiB，11 项离线资源 359.3KiB；原生 range / ResizeObserver / main 与 SVG 复用，无新依赖。
+
+本地未发布构建 c098f14c4266：JS + CSS gzip 97.2KiB，11 项离线资源 367.5KiB。PlanPanel / 原生滚动 / 日程布局复用现有 React 与 CSS，无新依赖。
+
+本地紧凑控件构建 43e36a14c3c6：JS + CSS gzip 97.7KiB，离线 11 项 / 370.2KiB。仅复用原生范围输入 / 按钮及现有 React，无新依赖。
+
+1.2.0 发布构建 c676b5417daf：57 模块，JS + CSS gzip 97.7KiB，离线 11 项 / 370.2KiB。复用原生范围输入 / 按钮、PlanPanel 与现有 React；无新依赖，锁文件不变。发布前生产依赖审计无已知漏洞，许可检查通过。

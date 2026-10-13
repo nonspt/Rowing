@@ -51,7 +51,7 @@ try{
   assert.equal(await page.getByRole('navigation').count(),0);
   await context.setOffline(false);assert.deepEqual(errors,[]);
   await browser.close();browser=undefined;
-  const suites=['tests/iphone-air.mjs','tests/ipad-mini.mjs','tests/circuit.mjs','tests/ui-review.mjs','tests/counted.mjs','tests/follow-layout.mjs','tests/editor-options.mjs'],requested=process.argv.slice(2);
+  const suites=['tests/iphone-air.mjs','tests/ipad-mini.mjs','tests/circuit.mjs','tests/ui-review.mjs','tests/counted.mjs','tests/follow-layout.mjs','tests/editor-options.mjs','tests/plan-layout.mjs','tests/compact-controls.mjs'],requested=process.argv.slice(2);
   if(requested.some(name=>!suites.some(script=>path.basename(script,'.mjs')===name)))throw new Error('Unknown Pages acceptance suite');
   for(const script of suites.filter(script=>!requested.length||requested.includes(path.basename(script,'.mjs')))){
     const code=await new Promise((resolve,reject)=>{

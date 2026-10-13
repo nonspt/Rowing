@@ -1,6 +1,6 @@
 import type {ReactNode} from 'react';
 import {Icon,type IconName} from './Icon.tsx';
-export function Section({title,action,children}:{title:string;action?:ReactNode;children:ReactNode}){return <section className="section"><div className="section-title"><h2>{title}</h2>{action}</div>{children}</section>;}
+export function Section({title,action,children,className=''}:{title:string;action?:ReactNode;children:ReactNode;className?:string}){return <section className={`section ${className}`}><div className="section-title"><h2>{title}</h2>{action}</div>{children}</section>;}
 export function Row({icon,title,subtitle,right,onClick}:{icon?:IconName;title:string;subtitle?:string;right?:ReactNode;onClick?:()=>void}) {
   const content=<>{icon&&<span className="row-icon"><Icon name={icon} size={21}/></span>}<span className="row-copy"><strong>{title}</strong>{subtitle&&<small>{subtitle}</small>}</span>{right&&<span className="row-value">{right}</span>}{onClick&&<Icon name="chevron" size={18}/>}</>;
   return onClick?<button className="list-row" type="button" onClick={onClick}>{content}</button>:<div className="list-row">{content}</div>;

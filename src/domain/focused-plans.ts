@@ -12,6 +12,10 @@ export const planWeeks=(p:Plan)=>p.training?.weeks??4;
 export const planMode=(p:Plan)=>p.training?.mode??(p.templateId==='P03'?'anaerobic':'aerobic');
 export function makeCourse(training:PlanTraining,week:number,slot:number):Course{
   validateTrainingDefinition(training);
+  if(training.custom&&training.mode==='anaerobic'&&training.weeklyDays>2&&slot!==0&&slot!==2){
+    const recovery=courseById('A01');recovery.title='恢复划行';
+    return withRowingAdjustments(recovery);
+  }
   if(!training.custom&&training.mode==='anaerobic'){
     const recovery=slot===1;
     if(recovery)return withRowingAdjustments(courseById('A01'));
@@ -38,7 +42,9 @@ export function makeCourse(training:PlanTraining,week:number,slot:number):Course
 export function focusedSchedule(plan:Plan):Scheduled[]{
   if(!plan.training)throw new Error('旧版计划没有完整周期定义。');
   const t=plan.training;validateTrainingDefinition(t);
-  const offsets=t.weeklyDays===1?[0]:t.weeklyDays===2?[0,3]:t.weeklyDays===3?[0,2,4]:[0,2,4,6];
+  // Custom mixed weeks keep interval days at offsets 0 / 3; extra days are recovery rows.
+  const mixed=t.custom&&t.mode==='anaerobic'&&t.weeklyDays>2;
+  const offsets=mixed?(t.weeklyDays===3?[0,1,3]:t.weeklyDays===4?[0,1,3,5]:[0,1,3,4,5]):t.weeklyDays===1?[0]:t.weeklyDays===2?[0,3]:t.weeklyDays===3?[0,2,4]:t.weeklyDays===4?[0,2,4,6]:[0,1,3,4,6];
   return Array.from({length:t.weeks},(_,week)=>offsets.map((day,slot)=>({...newEntity(),planId:plan.id,week,slot,localDate:addDays(plan.startDate,week*7+day),course:makeCourse(t,week,slot),status:'planned' as const}))).flat();
 }
 export function createFocusedPlan(input:PlanInput,timeZone:string):{plan:Plan;sessions:Scheduled[]}{

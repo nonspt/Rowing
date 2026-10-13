@@ -68,7 +68,7 @@ test('自定义 1–52 周边界与参数限制，不接受危险间歇参数',(
   assert.throws(()=>createFocusedPlan({...input(),startDate:'2026-02-30'},'UTC'));
   assert.throws(()=>createFocusedPlan({...input(),title:' '},'UTC'));
   const t={mode:'anaerobic',weeks:8,weeklyDays:2,custom:{warmupMinutes:8,cooldownMinutes:5,workSeconds:30,recoverySeconds:90,repeats:6}};
-  validateTrainingDefinition(t);assert.throws(()=>validateTrainingDefinition({...t,weeklyDays:3}));assert.throws(()=>validateTrainingDefinition({...t,custom:{...t.custom,recoverySeconds:60}}));assert.throws(()=>validateTrainingDefinition({...t,custom:{...t.custom,warmupMinutes:5}}));
+  validateTrainingDefinition(t);assert.throws(()=>validateTrainingDefinition({...t,weeklyDays:6}));assert.throws(()=>validateTrainingDefinition({...t,custom:{...t.custom,recoverySeconds:60}}));assert.throws(()=>validateTrainingDefinition({...t,custom:{...t.custom,warmupMinutes:5}}));
   assert.throws(()=>validateTrainingDefinition({...input().training,presetId:'AE01'}));
 });
 test('计划完成自动推进到第 5 周、12 周末；已跳过不计完成',()=>{
@@ -179,4 +179,22 @@ test('清空后可直接建立新计划，默认偏好恢复，不依赖刷新',
   await s.deleteAllData((await r.read()).revision);assert.equal((await r.read()).profile,null);
   await s.adoptFocusedPlan(input(),(await r.read()).revision);const state=await r.read();
   assert.equal(state.profile!.sound,false);assert.equal(state.plans.length,1);assert.equal(state.scheduled.length,input().training.weeks*input().training.weeklyDays);validateSnapshot(state);
+});
+
+
+test('每周 1–5 次自定义完整日程；混合无氧保留两次强度与跨周恢复距离',()=>{
+  for(const mode of ['aerobic','anaerobic'] as const)for(let weeklyDays=1;weeklyDays<=5;weeklyDays++){
+    const i=mode==='aerobic'?input():countedInput();i.training.weeklyDays=weeklyDays;i.training.weeks=52;
+    const {plan,sessions}=createFocusedPlan(i,'Asia/Shanghai');assert.equal(sessions.length,52*weeklyDays);
+    for(let week=0;week<52;week++){const rows=sessions.filter(s=>s.week===week);assert.equal(new Set(rows.map(s=>s.localDate)).size,weeklyDays);assert.deepEqual(rows.map(s=>s.slot),Array.from({length:weeklyDays},(_,i)=>i));if(mode==='anaerobic'){assert.equal(rows.filter(s=>s.course.category==='interval').length,Math.min(2,weeklyDays));assert.ok(rows.filter(s=>s.course.category!=='interval').every(s=>!s.course.stages.some(x=>x.exercise==='squat'||x.exercise==='pushup')));}}
+    if(mode==='anaerobic'){const dates=sessions.filter(s=>s.course.category==='interval').map(s=>Date.parse(s.localDate));for(let i=1;i<dates.length;i++)assert.ok(dates[i]-dates[i-1]>=3*86400000);}
+    const state=emptySnapshot();state.profile=profile();state.plans=[plan];state.scheduled=sessions;validateSnapshot(state);
+    for(const bad of [0,6,1.5])assert.throws(()=>validateTrainingDefinition({...i.training,weeklyDays:bad}));
+  }
+});
+
+test('五次计划真实备份往返及未完成计划编辑，完成快照不被改写',async()=>{
+  const r=new Repository(false),s=new AppService(r);await s.saveProfile(profile());const i=countedInput();i.training.weeklyDays=5;await s.adoptFocusedPlan(i,(await r.read()).revision);const before=await r.read();assert.equal(before.scheduled.length,10);assert.equal(before.scheduled.filter(x=>x.slot===4).length,2);const b=await s.backup();assert.deepEqual(parseBackup(JSON.stringify(b)).data,JSON.parse(JSON.stringify(b.data)));
+  const state=structuredClone(before);state.scheduled[0].status='completed';const kept=structuredClone(state.scheduled[0]);const next=structuredClone(i);next.training.custom!.workSeconds=30;next.training.custom!.recoverySeconds=100;editCustomPlan(state,state.plans[0].id,next);assert.deepEqual(state.scheduled.find(x=>x.id===kept.id),kept);assert.equal(state.scheduled.length,10);validateSnapshot(state);assert.throws(()=>editCustomPlan(state,state.plans[0].id,{...next,training:{...next.training,weeklyDays:4}}));
+  const invalid=JSON.parse(JSON.stringify(b));invalid.data.scheduled[0].slot=5;assert.throws(()=>parseBackup(JSON.stringify(invalid)));
 });
