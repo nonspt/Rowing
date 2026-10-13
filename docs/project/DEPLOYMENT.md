@@ -2,7 +2,7 @@
 
 2026-10-13；0.3.0 预览。仓库：[nonspt/Rowing](https://github.com/nonspt/Rowing)，在线应用：[划船机](https://nonspt.github.io/Rowing/)。
 
-当前本地 0.3.0 构建 **9cae958e7d5d**，本轮新增组合训练验收；云端 / 线上结果在本轮发布后记录于 VALIDATION_REPORT。
+0.3.0 构建 **9cae958e7d5d**。[Actions 38336038016](https://github.com/nonspt/Rowing/actions/runs/38336038016)规则、SVG、构建、手机 / 平板 / 组合验收与部署通过。线上 HTTPS 200、设置版本 0.3.0、构建一致；直接线上 iPad 15 + 组合 7 组通过，含完整 27 分钟课程、徒手暂停 / 刷新恢复、实际备份导入、自定义 / 旧计划、手机恢复及离线，0 pageerror。证据见 VALIDATION_REPORT。
 
 上一版 0.2.3 构建 **9130aafde932**；本地 /Rowing/ 下 iPhone Air 10+13 组、iPad mini 15 组通过。[Actions 38199385064](https://github.com/nonspt/Rowing/actions/runs/38199385064)规则、SVG、构建、手机 / 平板验收及部署通过。线上 HTTPS 200、构建与本地一致；直接对线上地址执行完整 iPad mini 15 组通过，0 pageerror，含双主题、自定义计划、实际计时 / 保存、离线重开。详细结果归档于 VALIDATION_REPORT。
 
