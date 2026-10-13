@@ -2,7 +2,7 @@
 
 2026-10-13；1.0.0 正式版。仓库：[nonspt/Rowing](https://github.com/nonspt/Rowing)，在线应用：[划船机](https://nonspt.github.io/Rowing/)。
 
-1.0.0 构建 **67ee0b60a73b**，本轮发布 / 线上复核待完成，下面保留上一版记录。
+1.0.0 构建 **67ee0b60a73b**。[Actions 38346540301](https://github.com/nonspt/Rowing/actions/runs/38346540301)规则、SVG、构建、63 组页面验收与部署成功。线上 HTTPS 200、设置版本 1.0.0、构建与本地一致；直接线上 UI / 删除 11、计次 / 完整时间线 7、iPad 15、组合 7，共 40 组通过、0 pageerror。下面保留历史发布记录。
 
 0.3.0 构建 **9cae958e7d5d**。[Actions 38336038016](https://github.com/nonspt/Rowing/actions/runs/38336038016)规则、SVG、构建、手机 / 平板 / 组合验收与部署通过。线上 HTTPS 200、设置版本 0.3.0、构建一致；直接线上 iPad 15 + 组合 7 组通过，含完整 27 分钟课程、徒手暂停 / 刷新恢复、实际备份导入、自定义 / 旧计划、手机恢复及离线，0 pageerror。证据见 VALIDATION_REPORT。
 
