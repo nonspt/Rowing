@@ -1,6 +1,6 @@
 # iPhone Air 参数模拟验收
 
-更新：2026-10-12；应用 0.2.3。
+更新：2026-10-13；应用 0.3.0。
 
 [Apple 技术规格](https://www.apple.com/iphone-air/specs/)分辨率 1260×2736；[Apple 布局规格](https://developer.apple.com/design/human-interface-guidelines/layout)列出 420×912 pt、@3x。模拟采用 420×912 CSS px、DPR 3、移动视口和触控；PNG 直接核验 1260×2736。
 

@@ -1,6 +1,15 @@
 import type {Plan,Snapshot} from '../domain/types.ts';
 import {addDays} from '../domain/plans.ts';
-import {createFocusedPlan,focusedSchedule,syncPlanProgress,type PlanInput} from '../domain/focused-plans.ts';
+import {createFocusedPlan,focusedSchedule,makeCourse,syncPlanProgress,type PlanInput} from '../domain/focused-plans.ts';
+import {defaultCircuit} from '../domain/circuit.ts';
+export function enablePlanCircuit(state:Snapshot,id:string):void{
+  if(state.draft)throw new Error('请先结束当前跟练，再加入徒手组合。');
+  const plan=state.plans.find(p=>p.id===id&&p.status==='active');
+  if(!plan?.training||plan.training.mode!=='anaerobic'||plan.training.circuit)throw new Error('请选择尚未加入徒手组合的无氧计划。');
+  const training={...plan.training,circuit:defaultCircuit()};
+  for(const item of state.scheduled.filter(s=>s.planId===id&&s.status==='planned')){item.course=makeCourse(training,item.week,item.slot??0);item.updatedAt=new Date().toISOString();item.version++;}
+  plan.training=training;plan.templateVersion='circuit-1';plan.updatedAt=new Date().toISOString();plan.version++;
+}
 export function adoptPlan(state:Snapshot,input:PlanInput):void{
   if(state.draft)throw new Error('请先完成或保留当前跟练，再更换计划。');
   if(!state.profile)throw new Error('本机设置尚未就绪，请刷新重试。');
@@ -16,7 +25,7 @@ export function editCustomPlan(state:Snapshot,id:string,input:PlanInput):void{
   if(kept.length&&(p.startDate!==input.startDate||p.training.mode!==input.training.mode||p.training.weeklyDays!==input.training.weeklyDays))throw new Error('已有进度时保留类型、日期与频次；可另存一个新计划。');
   if(kept.some(x=>x.week>=input.training.weeks))throw new Error('新周期不能短于已有进度。');
   const next=createFocusedPlan(input,p.timeZone).plan;
-  const candidate:Plan={...p,title:next.title,startDate:next.startDate,training:next.training,updatedAt:new Date().toISOString(),version:p.version+1};
+  const candidate:Plan={...p,title:next.title,startDate:next.startDate,training:next.training,templateVersion:next.templateVersion,updatedAt:new Date().toISOString(),version:p.version+1};
   const rebuilt=focusedSchedule(candidate).filter(x=>!kept.some(k=>k.week===x.week&&k.slot===x.slot)).map(x=>{
     const old=state.scheduled.find(y=>y.planId===id&&y.week===x.week&&y.slot===x.slot&&y.status==='planned');
     return old?{...x,id:old.id,createdAt:old.createdAt,version:old.version+1,linkedSessionId:old.linkedSessionId,localDate:p.startDate===candidate.startDate&&p.training!.weeklyDays===candidate.training!.weeklyDays?old.localDate:x.localDate}:x;

@@ -30,7 +30,7 @@ const follow=async(landscape=false)=>{
     await beside('.timer-area','.session-targets');
     const bounds=await dialog(page).boundingBox();assert.ok(Math.abs(bounds.width-(await page.evaluate(()=>innerWidth)))<1);
     const limits=await page.evaluate(()=>({height:innerHeight,bottom:parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom'))||0}));
-    const header=await dialog(page).locator('.sheet-header').boundingBox();for(const selector of ['.session-top','.timer','.effort-reading','.next-reading']){const b=await dialog(page).locator(selector).boundingBox();assert.ok(b.y>=header.y+header.height-1,selector+' not covered by header');assert.ok(b.y+b.height<=limits.height-limits.bottom+1,selector+' visible without scrolling');}
+    const header=await dialog(page).locator('.sheet-header').boundingBox();for(const selector of ['.session-top','.current-movement','.timer','.effort-reading','.next-reading','.session-queue']){const b=await dialog(page).locator(selector).boundingBox();assert.ok(b.y>=header.y+header.height-1,selector+' not covered by header');assert.ok(b.y+b.height<=limits.height-limits.bottom+1,selector+' visible without scrolling');}
     for(const label of ['开始跟练','结束跟练']){const b=await dialog(page).getByRole('button',{name:label,exact:true}).boundingBox();assert.ok(b.height>=72);assert.ok(b.y>=0&&b.y+b.height<=limits.height-limits.bottom+1,label+' visible without scrolling');}
     assert.ok(await dialog(page).locator('.timer').evaluate(e=>parseFloat(getComputedStyle(e).fontSize))>=170);
   }

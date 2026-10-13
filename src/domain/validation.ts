@@ -13,6 +13,7 @@ export function validateCourse(input: unknown): asserts input is Course {
   if (!Array.isArray(c.stages)||c.stages.length<2||c.stages.length>100) fail('课程阶段无效。');
   let sum=0; const ids=new Set();
   for (const value of c.stages as unknown[]) {const s=object(value); if (!id(s.id)||ids.has(s.id)||!['warmup','work','recovery','cooldown'].includes(String(s.kind))||!num(s.durationSeconds,1,21600)||!Number.isInteger(s.durationSeconds)||!str(s.cue,300)||!Array.isArray(s.rpe)||s.rpe.length!==2||!num(s.rpe[0],0,10)||!num(s.rpe[1],s.rpe[0],10)) fail('课程阶段字段无效。'); ids.add(s.id); sum+=s.durationSeconds as number;}
+  for(const value of c.stages as unknown[]){const s=object(value);if(s.exercise!==undefined&&(!['row','pushup','squat','rest','off-rower','on-rower'].includes(String(s.exercise))||(s.exercise!=='row'&&c.category!=='interval')||((s.exercise==='pushup'||s.exercise==='squat')&&s.kind!=='work')||(['rest','off-rower','on-rower'].includes(String(s.exercise))&&s.kind!=='recovery')))fail('课程动作类型无效。');}
   if (sum!==c.plannedDurationSeconds||sum>21600) fail('课程总时长与阶段不一致。');
 }
 export function validateWorkout(input: unknown): asserts input is Workout {

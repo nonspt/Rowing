@@ -1,10 +1,12 @@
 import type {PlanTraining} from './types.ts';
 import {planDurations,presets} from '../content/presets.ts';
+import {validateCircuit} from './circuit.ts';
 const integer=(x:unknown,min:number,max:number)=>typeof x==='number'&&Number.isInteger(x)&&x>=min&&x<=max;
 export function validateTrainingDefinition(input:unknown):asserts input is PlanTraining{
   if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('训练计划参数无效。');
   const p=input as Record<string,unknown>;
   if(!['aerobic','anaerobic'].includes(String(p.mode))||!integer(p.weeks,1,52)||!integer(p.weeklyDays,1,4))throw new Error('请选择有氧或无氧、1–52 周及每周 1–4 次。');
+  if(p.circuit!==undefined){if(p.mode!=='anaerobic')throw new Error('有氧计划不能包含徒手组合。');validateCircuit(p.circuit);}
   if(p.custom===undefined){
     const preset=presets.find(x=>x.id===p.presetId);
     if(!preset||preset.mode!==p.mode||preset.weeklyDays!==p.weeklyDays||!(planDurations as readonly number[]).includes(p.weeks as number))throw new Error('模板、周期或每周频次无效。');

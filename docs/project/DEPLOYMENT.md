@@ -1,14 +1,16 @@
 # GitHub Pages 部署
 
-2026-10-12；0.2.3 预览。仓库：[nonspt/Rowing](https://github.com/nonspt/Rowing)，在线应用：[划船机](https://nonspt.github.io/Rowing/)。
+2026-10-13；0.3.0 预览。仓库：[nonspt/Rowing](https://github.com/nonspt/Rowing)，在线应用：[划船机](https://nonspt.github.io/Rowing/)。
 
-0.2.3 构建 **9130aafde932**；本地 /Rowing/ 下 iPhone Air 10+13 组、iPad mini 15 组通过。[Actions 38199385064](https://github.com/nonspt/Rowing/actions/runs/38199385064)规则、SVG、构建、手机 / 平板验收及部署通过。线上 HTTPS 200、构建与本地一致；直接对线上地址执行完整 iPad mini 15 组通过，0 pageerror，含双主题、自定义计划、实际计时 / 保存、离线重开。详细结果归档于 VALIDATION_REPORT。
+当前本地 0.3.0 构建 **9cae958e7d5d**，本轮新增组合训练验收；云端 / 线上结果在本轮发布后记录于 VALIDATION_REPORT。
+
+上一版 0.2.3 构建 **9130aafde932**；本地 /Rowing/ 下 iPhone Air 10+13 组、iPad mini 15 组通过。[Actions 38199385064](https://github.com/nonspt/Rowing/actions/runs/38199385064)规则、SVG、构建、手机 / 平板验收及部署通过。线上 HTTPS 200、构建与本地一致；直接对线上地址执行完整 iPad mini 15 组通过，0 pageerror，含双主题、自定义计划、实际计时 / 保存、离线重开。详细结果归档于 VALIDATION_REPORT。
 
 Pages 已在此前由用户开启，Source 为 GitHub Actions；本轮无需重复设置。main 更新自动测试、构建、发布。
 
 ## 构建与路径
 
-工作流使用 Ubuntu 24.04、Node 24、pnpm 11.25.0，第三方 Action 固定提交；依次执行锁文件安装、22 项规则、SVG 审计、生产构建、/Rowing/ 子路径与 iPhone Air / iPad mini 完整操作 / 布局、上传 dist 与 Pages 发布。构建 contents:read，部署 pages:write / id-token:write。
+工作流使用 Ubuntu 24.04、Node 24、pnpm 11.25.0，第三方 Action 固定提交；依次执行锁文件安装、28 项规则、SVG 审计、生产构建、/Rowing/ 子路径与 iPhone Air / iPad mini 操作 / 布局与组合训练完整流程、上传 dist 与 Pages 发布。构建 contents:read，部署 pages:write / id-token:write。
 
 仅提交源码、锁文件、安装资源、脚本、测试与维护文档；不上传 node_modules、dist、test-results、.env 或用户备份。
 
@@ -18,7 +20,7 @@ Pages 不读取 _headers；构建 HTML 在脚本之前设置 CSP 与 no-referrer
 
 ## 发布验收
 
-pnpm test:pages 挂载无自定义 HTTP 安全头的 /Rowing/，检查路径、图标、SW、CSP、离线与 iPhone Air 10+13 组、iPad mini 15 组流程。线上可通过 APP_URL 指向 HTTPS 后独立核验，已执行范围见 VALIDATION_REPORT。
+pnpm test:pages 挂载无自定义 HTTP 安全头的 /Rowing/，检查路径、图标、SW、CSP、离线与 iPhone Air 10+13 组、iPad mini 15 组、组合训练 7 组流程。线上可通过 APP_URL 指向 HTTPS 后独立核验，已执行范围见 VALIDATION_REPORT。
 
 报告在忽略的 test-results，测试使用隔离浏览器与合成数据。真实 iOS Safari / 主屏仍需实际设备。
 
@@ -30,7 +32,9 @@ pnpm test:pages 挂载无自定义 HTTP 安全头的 /Rowing/，检查路径、�
 
 ## 回滚
 
-不能直接把 0.1.x 部署到已有 v2 数据的源。修复应采用保持 v2 数据兼容的 0.2.x 补丁，或只回退受影响 UI，同时保留 v2 Repository / 校验和新 Plan 定义。通过 main 新增提交重走 CI，不强推或删库恢复。
+不能直接把 0.1.x 部署到已有 v2 数据的源。修复应采用保持 v2 与组合动作语义兼容的 0.3.x 补丁，或只回退受影响 UI，同时保留 v2 Repository / 校验和新 Plan 定义。通过 main 新增提交重走 CI，不强推或删库恢复。
+
+包含 circuit-1 的组合备份需支持动作语义的 0.3.x 构建；0.2.x 不显示徒手 / 换位名称，不作为功能兼容回滚目标。修复采用保留新动作与 v2 数据的补丁，或只回退 UI 布局，见 ADR 0004。
 
 v2 备份只能导入仍支持 v2 的已验证构建。完整回滚演练未执行，见 KNOWN_ISSUES 与 [ADR 0003](../architecture/ADR/0003-focused-plans-v2.md)。
 

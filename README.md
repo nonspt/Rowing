@@ -1,6 +1,6 @@
 # 划船机
 
-家用划船机训练计划 PWA，当前 **0.2.3 预览版**。仅保留计划与跟练，采用 iOS 风格和系统深色模式。
+家用划船机训练计划 PWA，当前 **0.3.0 预览版**。仅保留计划与跟练，采用 iOS 风格和系统深色模式。
 
 [在线使用](https://nonspt.github.io/Rowing/) · [源码](https://github.com/nonspt/Rowing) · [部署状态](https://github.com/nonspt/Rowing/actions/workflows/pages.yml)
 
@@ -12,12 +12,13 @@
 
 - 六种模板，周期为 2、4、6、8、12 周。
 - 自定义 1–52 周：名称、类型、开始日期、频次、热身、放松；有氧可调主训练时长，无氧可调工作 / 恢复秒数和组数。
+- 新无氧模板加入快划、深蹲、俯卧撑、专门换位与休息；自定义可选择动作与时长，或保留仅划船。旧无氧计划可显式加入组合，只更新待训练课程。
 - 更换计划可恢复已保存计划；编辑自定义只改变未完成课程，保留已完成快照与已有读数。
 - 主界面为当前计划、下一次跟练、周日程。教学、课程浏览、历史统计、手动补录入口已移除。
 - 设置只保留主题、提示音、备份和安装 / 更新。
 - 前台计时；切出、锁屏或长间隔暂停，不补算后台时间。
 - 跟练用力上限 16，各阶段按原目标比例换算并四舍五入；突出用力数值与下一段，动作提示使用较小辅助文字。
-- iPad mini 7 横屏：计划 / 日程并排、三列模板、两列表单；跟练全屏，左侧大倒计时，右侧用力与下一段，主要按钮 ≥72px。
+- iPad mini 7 横屏：计划统计、下一次课结构、周历与周期进度；跟练全屏，左侧当前动作 / 倒计时，右侧并列目标 / 下一段与 72px 按钮，下方紧凑阶段列表。
 - 数据保存在当前浏览器，无账号、设备连接和云同步。旧版数据无损升级为 v2，支持 v1 / v2 JSON 备份合并。
 - 统一 SVG 图标和进度条；安装 PNG 由 SVG 派生以满足平台要求。
 
@@ -40,7 +41,7 @@ pnpm audit:svg
 pnpm test:pages
 ```
 
-保持预览运行后可单独执行 pnpm test:browser、pnpm test:pwa、pnpm test:iphone-air、pnpm test:ipad-mini。CHROME_PATH 指定 Chrome，APP_URL 指定目标；测试使用隔离浏览器和合成数据，报告与截图在被忽略的 test-results。test:pages 同时执行手机与平板验收。
+保持预览运行后可单独执行 pnpm test:browser、pnpm test:pwa、pnpm test:iphone-air、pnpm test:ipad-mini、pnpm test:circuit。CHROME_PATH 指定 Chrome，APP_URL 指定目标；测试使用隔离浏览器和合成数据，报告与截图在被忽略的 test-results。test:pages 同时执行手机、平板与组合训练验收。
 
 main 更新后 Actions 自动构建部署。相对资源、Manifest 和 Service Worker 支持 /Rowing/；Pages 通过 HTML 执行 CSP / Referrer 策略，不读取自定义 _headers。
 
@@ -48,12 +49,12 @@ main 更新后 Actions 自动构建部署。相对资源、Manifest 和 Service 
 
 ## 文档
 
-- [当前开发文档](docs/product/训练计划开发文档_V2.md)
+- [当前开发文档](docs/product/训练计划开发文档_V2.md)、[组合训练说明与来源](docs/product/组合训练说明.md)
 - [项目事实](docs/project/PROJECT_CONTEXT.md)、[当前状态](docs/project/CURRENT_STATUS.md)
 - [验收记录](docs/project/VALIDATION_REPORT.md)、[iPhone Air 模拟](docs/project/IPHONE_AIR_ACCEPTANCE.md)
 - [iPad mini 7 横屏适配与模拟](docs/project/IPAD_MINI_ACCEPTANCE.md)
 - [已知事项](docs/project/KNOWN_ISSUES.md)、[技术债务](docs/project/TECH_DEBT.md)
-- [部署与回滚](docs/project/DEPLOYMENT.md)、[数据升级决策](docs/architecture/ADR/0003-focused-plans-v2.md)
+- [部署与回滚](docs/project/DEPLOYMENT.md)、[数据升级决策](docs/architecture/ADR/0003-focused-plans-v2.md)、[组合数据兼容](docs/architecture/ADR/0004-bodyweight-circuit.md)
 - [SVG 依据](docs/product/动作图示规范.md)、[依赖](docs/architecture/DEPENDENCIES.md)、[变更历史](CHANGELOG.md)
 
 iPhone Air 与 iPad mini 7 分辨率、触控、双主题和文字放大通过 Chromium 参数模拟验证。真实 iOS / iPadOS Safari、主屏、VoiceOver 与锁屏声音仍待实际设备验证。

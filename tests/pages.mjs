@@ -51,7 +51,7 @@ try{
   assert.equal(await page.getByRole('navigation').count(),0);
   await context.setOffline(false);assert.deepEqual(errors,[]);
   await browser.close();browser=undefined;
-  for(const script of ['tests/iphone-air.mjs','tests/ipad-mini.mjs']){
+  for(const script of ['tests/iphone-air.mjs','tests/ipad-mini.mjs','tests/circuit.mjs']){
     const code=await new Promise((resolve,reject)=>{
       const child=spawn(process.execPath,[script],{env:{...process.env,APP_URL:url},stdio:'inherit'});
       child.once('error',reject);child.once('close',resolve);

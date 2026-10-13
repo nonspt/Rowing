@@ -1,4 +1,4 @@
-import {adoptPlan,editCustomPlan,activatePlan,adjustPlanSession} from './plan-service.ts';
+import {adoptPlan,editCustomPlan,activatePlan,adjustPlanSession,enablePlanCircuit} from './plan-service.ts';
 import {focusedEligibility,syncPlanProgress,type PlanInput} from '../domain/focused-plans.ts';
 import {APP_VERSION, CONTENT_VERSION, newEntity} from '../domain/types.ts';
 import type {Backup, Course, Draft, Feedback, Profile, Snapshot, Workout} from '../domain/types.ts';
@@ -22,6 +22,7 @@ export class AppService {
   private writable(state:Snapshot) {if(state.draft && state.draft.owner!==this.owner && state.draft.leaseUntil>Date.now()) throw new Error('其他窗口正在训练，请在原窗口暂停或稍后重试。');}
   adoptFocusedPlan(input:PlanInput,revision:number) {return this.repository.update(s=>{this.writable(s);adoptPlan(s,input);},revision);}
   editFocusedPlan(id:string,input:PlanInput,revision:number) {return this.repository.update(s=>{this.writable(s);editCustomPlan(s,id,input);},revision);}
+  enableFocusedCircuit(id:string,revision:number) {return this.repository.update(s=>{this.writable(s);enablePlanCircuit(s,id);},revision);}
   activateFocusedPlan(id:string) {return this.repository.update(s=>{this.writable(s);activatePlan(s,id);});}
   adjustFocusedSession(id:string,action:'move'|'skip'|'restore',date?:string) {return this.repository.update(s=>{this.writable(s);adjustPlanSession(s,id,action,date);});}
   async beginScheduled(id:string,confirmed=false):Promise<Draft> {

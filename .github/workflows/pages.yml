@@ -33,7 +33,7 @@ jobs:
         run: pnpm audit:svg
       - name: Build PWA
         run: pnpm build
-      - name: Verify Pages path and iPhone / iPad flows
+      - name: Verify Pages path, iPhone / iPad and circuit flows
         run: pnpm test:pages
         env:
           CHROME_PATH: /usr/bin/google-chrome

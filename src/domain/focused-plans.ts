@@ -5,6 +5,7 @@ import type {Course,Plan,PlanTraining,Scheduled,Snapshot,Stage} from './types.ts
 import {addDays,localDate,scheduleWeek,weekStart} from './plans.ts';
 import {validDate} from './validation.ts';
 import {validateTrainingDefinition} from './plan-definition.ts';
+import {withCircuit} from './circuit.ts';
 export type PlanInput={title:string;startDate:string;training:PlanTraining};
 export const planWeeks=(p:Plan)=>p.training?.weeks??4;
 export const planMode=(p:Plan)=>p.training?.mode??(p.templateId==='P03'?'anaerobic':'aerobic');
@@ -15,7 +16,7 @@ export function makeCourse(training:PlanTraining,week:number,slot:number):Course
     if(recovery)return courseById('A01');
     const c=courseById(training.presetId==='AN03'&&week>0&&slot===2?'H02':'H01');
     if((week+1)%4===0){c.stages=[c.stages[0],...c.stages.slice(1,9),c.stages.at(-1)!];c.contentVersion='focused-1';c.status='draft';}
-    c.plannedDurationSeconds=c.stages.reduce((s,x)=>s+x.durationSeconds,0);return c;
+    c.plannedDurationSeconds=c.stages.reduce((s,x)=>s+x.durationSeconds,0);return training.circuit?withCircuit(c,training.circuit,training.presetId==='AN01'?3:4):c;
   }
   const custom=training.custom;
   const intro=training.presetId==='AE01',long=training.presetId==='AE03';
@@ -30,7 +31,8 @@ export function makeCourse(training:PlanTraining,week:number,slot:number):Course
     if(config.recoverySeconds)stages.push({id:id+'-recovery-'+i,kind:'recovery',durationSeconds:config.recoverySeconds,rpe:[2,3],cue:'减小用力，充分恢复。'});
   }
   stages.push({id:id+'-cooldown',kind:'cooldown',durationSeconds:config.cooldownMinutes*60,rpe:[2,3],cue:'逐渐减小用力，轻松结束。'});
-  return {id,title:interval?'自定义短间歇':custom?'自定义有氧':presets.find(x=>x.id===training.presetId)!.title,category:interval?'interval':'aerobic',description:'包含完整热身、主训练与放松。',suitability:interval?'已有规律划船基础':'按当日感受调整用力',level:interval?'regular':intro?'new':'basic',contentVersion:custom?'custom-1':'focused-1',status:'draft',stages,plannedDurationSeconds:stages.reduce((s,x)=>s+x.durationSeconds,0),focus:interval?'短工作段，充分恢复':'舒适稳定的持续划行',alternativeId:'A01'};
+  const course:Course={id,title:interval?'自定义短间歇':custom?'自定义有氧':presets.find(x=>x.id===training.presetId)!.title,category:interval?'interval':'aerobic',description:'包含完整热身、主训练与放松。',suitability:interval?'已有规律划船基础':'按当日感受调整用力',level:interval?'regular':intro?'new':'basic',contentVersion:custom?'custom-1':'focused-1',status:'draft',stages,plannedDurationSeconds:stages.reduce((s,x)=>s+x.durationSeconds,0),focus:interval?'短工作段，充分恢复':'舒适稳定的持续划行',alternativeId:'A01'};
+  return training.circuit?withCircuit(course,training.circuit):course;
 }
 export function focusedSchedule(plan:Plan):Scheduled[]{
   if(!plan.training)throw new Error('旧版计划没有完整周期定义。');
@@ -41,7 +43,7 @@ export function focusedSchedule(plan:Plan):Scheduled[]{
 export function createFocusedPlan(input:PlanInput,timeZone:string):{plan:Plan;sessions:Scheduled[]}{
   validateTrainingDefinition(input.training);
   if(!input.title.trim()||input.title.length>60||!validDate(input.startDate))throw new Error('请输入 1–60 字的名称和有效开始日期。');
-  const plan:Plan={...newEntity(),templateId:'FOCUSED',title:input.title.trim(),startDate:input.startDate,week:0,status:'active',ruleVersion:'focused-rules-1',templateVersion:input.training.custom?'custom-1':'focused-1',reason:'按完整周期安排，保留热身、恢复与放松。',timeZone,training:structuredClone(input.training)};
+  const plan:Plan={...newEntity(),templateId:'FOCUSED',title:input.title.trim(),startDate:input.startDate,week:0,status:'active',ruleVersion:'focused-rules-1',templateVersion:input.training.circuit?'circuit-1':input.training.custom?'custom-1':'focused-1',reason:'按完整周期安排，保留热身、恢复与放松。',timeZone,training:structuredClone(input.training)};
   return {plan,sessions:focusedSchedule(plan)};
 }
 export function syncPlanProgress(plan:Plan,state:Snapshot):void{
